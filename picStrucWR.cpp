@@ -232,10 +232,12 @@ int picWr()
 //int main()
 //{
 //	struct playId pId;
-//	pId.gameId = 8;
-//	pId.vidId = 3;
+//	pId.gameId = 2;
+//	pId.vidId = 4;
 //
 //	play p(pId);
 //	p.setUp();
-//	p.rectification();
+//	//p.rectification();
+//	Mat homoMat;
+//	p.getOverheadFieldHomo(homoMat);
 //}

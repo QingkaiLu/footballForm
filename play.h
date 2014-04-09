@@ -93,12 +93,19 @@ public:
 
 	void rectification();
 	void extractOdStripsFeatRect(direction dir, vector<int> &featureVec);
+	void extractOdGridsFeatRect(direction dir, vector<int> &featureVec);
+
+	//get the coordinate from the overhead field model
+	void getOverheadFieldHomo(Mat &homoMat);
+	void extractOdStripsFeatFldCrd(direction dir, vector<int> &featureVec);
+	void extractOdGridsFeatFldCrd(direction dir, vector<int> &featureVec);
 
 public:
 	struct playId pId;
 
 	int mos;
 	vector<struct yardLine> yardLines;
+	vector<vector<Point2d> > yardLnsFldModel;
 	double yardLnsDist;
 	Point2d vp;
 	bool vpExist;
@@ -164,7 +171,7 @@ void plotFormation(Mat& img, const formation *f, const vector<struct track> trac
 
 void plotGtForm(Mat& img, const vector<player> &gtPlayers);
 
-void plotRect(Mat& img, struct rect& scrimLnRect);
+void plotRect(Mat& img, struct rect& scrimLnRect, Scalar clr);
 
 void drawLines(Mat& dst, struct yardLine yLine, CvScalar color);
 
@@ -204,7 +211,7 @@ int fgPixelsInsideBox(const Mat &fgImg, const struct rect &box);
 
 void plotYardLnsAndLos(Mat& img, struct rect& scrimLnRect, vector<yardLine> yardlns);
 
-void plotScanLines(Mat& img, const vector<rect> &scanLines, const vector<int> &featureVec);
+void plotScanLines(Mat& img, vector<rect> &scanLines, const vector<int> &featureVec);
 double avgLnDist(vector<struct yardLine> lines);
 
 bool readGradientLos(const string &filePath, Point2d los[2]);
@@ -213,5 +220,8 @@ void plotYardLnsAndLos(Mat& img, struct rect& scrimLnRect, vector<yardLine> yard
 
 void plotLos(Mat& img, struct rect& scrimLnRect);
 void plotLos(Mat& img, struct rect& scrimLnRect, Point2d los[2]);
+
+void plotYardLnsAndLos(Mat& img, struct rect& scrimLnRect, vector<vector<Point2d> > yardLns);
+void plotYardLnsAndLos(Mat& img, struct rect& scrimLnRect, vector<vector<Point2d> > yardLns, Point2d los[2]);
 
 #endif

@@ -5,13 +5,14 @@
 #include <vector>
 #include <fstream>
 
+#include "extractOdVidFeats.h"
 #include "randTrees.h"
 
 using namespace cv;
 using namespace std;
 
 
-#define ATTRIBUTES_PER_SAMPLE 5
+#define ATTRIBUTES_PER_SAMPLE 100
 #define INF std::numeric_limits<double>/*or float*/::infinity()
 #define NEGINF -1.0 * INF
 
@@ -174,32 +175,35 @@ void randTreeTrainTest(vector<int> &trainGames, vector<int> &testGames)
 
 }
 
-//int main()
-//{
-////	int games[4] = {2, 8, 9, 10};
-////	for(int i = 0; i < 4; ++i)
-////	{
-////		vector<int> trainGames, testGames;
-////		for(int j = 0; j < 4; ++j)
-////		{
-////			if(j == i)
-////				testGames.push_back(games[j]);
-////			else
-////				trainGames.push_back(games[j]);
-////		}
-////
-////		cout << "Leave game " << games[i] << " out... " << endl;
-////		randTreeTrainTest(trainGames, testGames);
-////	}
-//	vector<int> trainGames, testGames;
-//	trainGames.push_back(8);
-//	//trainGames.push_back(8);
-////	trainGames.push_back(9);
-////	trainGames.push_back(10);
-//	//testGames.push_back(2);
-//	testGames.push_back(8);
-////	testGames.push_back(9);
-////	testGames.push_back(10);
-//	randTreeTrainTest(trainGames, testGames);
-//	return 1;
-//}
+int main()
+{
+	extracOdVidFeatsRts(2);
+	extracOdVidFeatsRts(8);
+
+//	int games[4] = {2, 8, 9, 10};
+//	for(int i = 0; i < 4; ++i)
+//	{
+//		vector<int> trainGames, testGames;
+//		for(int j = 0; j < 4; ++j)
+//		{
+//			if(j == i)
+//				testGames.push_back(games[j]);
+//			else
+//				trainGames.push_back(games[j]);
+//		}
+//
+//		cout << "Leave game " << games[i] << " out... " << endl;
+//		randTreeTrainTest(trainGames, testGames);
+//	}
+	vector<int> trainGames, testGames;
+	trainGames.push_back(2);
+	trainGames.push_back(8);
+//	trainGames.push_back(9);
+//	trainGames.push_back(10);
+	testGames.push_back(2);
+	testGames.push_back(8);
+//	testGames.push_back(9);
+//	testGames.push_back(10);
+	randTreeTrainTest(trainGames, testGames);
+	return 1;
+}

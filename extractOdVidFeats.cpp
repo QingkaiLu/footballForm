@@ -94,13 +94,21 @@ void extracOdVidFeatsRts(int gameId)
 //		p->extractOdGridsFeature(d, fVecOnePlay);
 		d = leftDir;
 		//p->extractOdStripsFeature(d, fVecOnePlayLeft);
-		p->extractOdStripsFeatRect(d, fVecOnePlayLeft);
+//		Mat H;
+//		p->getOverheadFieldHomo(H);
+//		p->extractOdStripsFeatRect(d, fVecOnePlayLeft);
+		//p->extractOdGridsFeatRect(d, fVecOnePlayLeft);
+		//p->extractOdStripsFeatFldCrd(d, fVecOnePlayLeft);
+		p->extractOdGridsFeatFldCrd(d, fVecOnePlayLeft);
 		delete p;
 		p = new play(pIds[i]);
 		p->setUp();
 		d = rightDir;
 		//p->extractOdStripsFeature(d, fVecOnePlayRight);
-		p->extractOdStripsFeatRect(d, fVecOnePlayRight);
+		//p->extractOdStripsFeatRect(d, fVecOnePlayRight);
+		//p->extractOdGridsFeatRect(d, fVecOnePlayRight);
+//		p->extractOdStripsFeatFldCrd(d, fVecOnePlayRight);
+		p->extractOdGridsFeatFldCrd(d, fVecOnePlayRight);
 		for(unsigned int j = 0; j < fVecOnePlayLeft.size(); ++j)
 			fVecOnePlay.push_back(fVecOnePlayLeft[j] - fVecOnePlayRight[j]);
 
@@ -233,11 +241,11 @@ void extracOdVidFeatsSvm()
 	return;
 }
 
-int main()
-{
-	extracOdVidFeatsRts(2);
-	extracOdVidFeatsRts(8);
-//	extracOdVidFeatsRts(9);
-//	extracOdVidFeatsRts(10);
-	return 1;
-}
+//int main()
+//{
+//	extracOdVidFeatsRts(2);
+//	extracOdVidFeatsRts(8);
+////	extracOdVidFeatsRts(9);
+////	extracOdVidFeatsRts(10);
+//	return 1;
+//}

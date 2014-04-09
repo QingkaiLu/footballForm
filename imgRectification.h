@@ -31,12 +31,14 @@
 
 void drawFieldModel(cv::Mat &fieldModel);
 
+void getFieldYardLines(std::vector<std::vector<cv::Point2d> > &yardLines);
+
 bool readMatches(std::string matchesFile, std::vector<cv::Point2f> &srcPoints, std::vector<cv::Point2f> &dstPoints);
 
 void rectifyImageToField(std::string matchesFile, const cv::Mat &srcImg, cv::Mat &dstImg, cv::Mat &homoMat);
 
 //void homoTransPoint(const cv::Point2d &srcPnt, const cv::Mat &homoMat, cv::Point2d &dstPnt);
 
-void transFieldToImage(std::string matchesFile, const cv::Mat &srcImg, cv::Mat &dstImg, cv::Mat &homoMat);
+void transFieldToImage(std::string matchesFile, cv::Mat &dstImg, cv::Mat &homoMat);
 
 #endif

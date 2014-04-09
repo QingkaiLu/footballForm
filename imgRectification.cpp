@@ -25,6 +25,16 @@ void drawFieldModel(Mat &fieldModel) {
 	return;
 }
 
+void getFieldYardLines(vector<vector<Point2d> > &yardLines)
+{
+	for (int i = EndZoneWidth; i <= (FieldWidth - EndZoneWidth); i += YardLinesDist) {
+		vector<Point2d> yardLine;
+		yardLine.push_back(Point2i(i, 0));
+		yardLine.push_back(Point2i(i, FieldLength));
+		yardLines.push_back(yardLine);
+	}
+}
+
 bool readMatches(string matchesFile, vector<Point2f> &srcPoints, vector<Point2f> &dstPoints)
 {
 	ifstream fin(matchesFile.c_str());
@@ -119,11 +129,14 @@ void rectifyImageToField(string matchesFile, const Mat &srcImg, Mat &dstImg, Mat
 	drawFieldModel(dstImg);
 }
 
-void transFieldToImage(string matchesFile, const Mat &srcImg, Mat &dstImg, Mat &homoMat)
+void transFieldToImage(string matchesFile, Mat &dstImg, Mat &homoMat)
 {
 	vector<Point2f> srcPoints, dstPoints;
-	readMatches(matchesFile, srcPoints, dstPoints);
-	homoMat = findHomography(srcPoints, dstPoints);
+	readMatches(matchesFile, dstPoints, srcPoints);
+	homoMat = findHomography(srcPoints, dstPoints);;
+	Mat srcImg;
+	srcImg.create(FieldLength, FieldWidth, CV_32FC3);
+	drawFieldModel(srcImg);
 	Size distImgSize(imgXLen, imgYLen);
 	dstImg.create(imgYLen, imgXLen, CV_32FC3);
 	warpPerspective(srcImg, dstImg, homoMat, distImgSize);
