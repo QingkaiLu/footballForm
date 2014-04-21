@@ -14,23 +14,23 @@ void drawFieldModel(Mat &fieldModel) {
 //	fieldModel.create(FieldLength, FieldWidth, CV_32FC3);
 //	fieldModel = Scalar(0,255,0);
 	//draw yard lines
-	for (int i = EndZoneWidth; i <= (FieldWidth - EndZoneWidth); i += YardLinesDist) {
-		line(fieldModel, Point2i(i, 0), Point2i(i, FieldLength), CV_RGB(200, 200, 200), 2, 8, 0);
+	for (int i = EndZoneWidth - 1; i < (FieldWidth - EndZoneWidth); i += YardLinesDist) {
+		line(fieldModel, Point2i(i, 0), Point2i(i, FieldLength - 1), CV_RGB(200, 200, 200), 2, 8, 0);
 	}
 	//draw hash lines
-	for (int i = EndZoneWidth; i <= (FieldWidth - EndZoneWidth); i += HashLinesDist) {
-		line(fieldModel, Point2i(i, HashToSideLineDist - HashLinesLen * 0.5), Point2i(i, HashToSideLineDist + HashLinesLen * 0.5), CV_RGB(200, 200, 200), 2, 8, 0);
-		line(fieldModel, Point2i(i, (FieldLength - HashToSideLineDist) - HashLinesLen * 0.5), Point2i(i, (FieldLength - HashToSideLineDist) + HashLinesLen * 0.5), CV_RGB(200, 200, 200), 2, 8, 0);
+	for (int i = EndZoneWidth - 1; i < (FieldWidth - EndZoneWidth); i += HashLinesDist) {
+		line(fieldModel, Point2i(i, HashToSideLineDist - 1 - HashLinesLen * 0.5), Point2i(i, HashToSideLineDist - 1 + HashLinesLen * 0.5), CV_RGB(200, 200, 200), 2, 8, 0);
+		line(fieldModel, Point2i(i, (FieldLength - 1 - HashToSideLineDist) - HashLinesLen * 0.5), Point2i(i, (FieldLength - 1 - HashToSideLineDist) + HashLinesLen * 0.5), CV_RGB(200, 200, 200), 2, 8, 0);
 	}
 	return;
 }
 
 void getFieldYardLines(vector<vector<Point2d> > &yardLines)
 {
-	for (int i = EndZoneWidth; i <= (FieldWidth - EndZoneWidth); i += YardLinesDist) {
+	for (int i = EndZoneWidth - 1; i < (FieldWidth - EndZoneWidth); i += YardLinesDist) {
 		vector<Point2d> yardLine;
 		yardLine.push_back(Point2i(i, 0));
-		yardLine.push_back(Point2i(i, FieldLength));
+		yardLine.push_back(Point2i(i, FieldLength - 1));
 		yardLines.push_back(yardLine);
 	}
 }

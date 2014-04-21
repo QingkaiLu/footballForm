@@ -8,7 +8,7 @@
 
 void readOdLabels(std::string odLabelFilePath, std::vector<playId> &pIds, std::vector<char> &dir, std::vector<char> &odLabel);
 
-void extracOdVidFeatsRts(int gameId);
+void extracOdVidFeatsRts(int gameId, std::vector<playId> &pIds);
 
 void extracOdVidFeatSvm();
 

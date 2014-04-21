@@ -5,8 +5,10 @@
 
 #include "extractOdVidFeats.h"
 #include "play.h"
+#include "imgRectification.h"
 
 using namespace std;
+using namespace cv;
 
 void readOdLabels(string odLabelFilePath, vector<playId> &pIds, vector<string> &dirs, vector<string> &odLabels)
 {
@@ -43,108 +45,6 @@ void readOdLabels(string odLabelFilePath, vector<playId> &pIds, vector<string> &
 
 
 	fin.close();
-}
-
-void extracOdVidFeatsRts(int gameId)
-{
-	///home/qingkai/workspace/picStrucWR/randTreesTrainData/ods
-//	string odLabelFilePath = "randTreesTrainData/ods";
-//	string odLabelFilePath = "randTreesTrainData/odEachVidDifViewMultiGames";
-
-	ostringstream convertGameId;
-	convertGameId << gameId ;
-	string gameIdStr = convertGameId.str();
-
-	if(gameId < 10)
-		gameIdStr = "0" + gameIdStr;
-	string odPIdsPath = "odGame" + gameIdStr;
-
-//	string odLabelFilePath = "randTreesTrainData/odGame" + gameIdStr;
-	string odLabelFilePath = "randTreesTrainData/odGame" + gameIdStr + "Rect";
-	vector<playId> pIds;
-	vector<string> dirs, odLabels;
-
-	readOdLabels(odLabelFilePath, pIds, dirs, odLabels);
-
-	cout << "Computing feature vectors... " << endl;
-
-	//vector< vector<int> > fVecsAllPlay;
-	//string featuresFile = "randTreesTrainData/featureVecsGame" + gameIdStr;
-	string featuresFile = "randTreesTrainData/featuresGame" + gameIdStr + "Rect";
-	ofstream fout(featuresFile.c_str());
-	//compute feature vector for each play with all models
-	for(unsigned int i = 0; i < pIds.size(); ++i)
-//	for(unsigned int i = 10; i < 12; ++i)
-	{
-		vector<int> fVecOnePlay, fVecOnePlayLeft, fVecOnePlayRight;
-		play *p = NULL;
-		cout << "gameId: " << pIds[i].gameId << " vidId: " << pIds[i].vidId << endl;
-		if (p != NULL)
-			delete p;
-		p = new play(pIds[i]);
-		p->setUp();
-
-		//p->rectification();
-
-		direction d = nonDir;
-//		if(dirs[i] == "l")
-//			d = leftDir;
-//		else if (dirs[i] == "r")
-//			d = rightDir;
-//		p->extractOdGridsFeature(d, fVecOnePlay);
-		d = leftDir;
-		//p->extractOdStripsFeature(d, fVecOnePlayLeft);
-//		Mat H;
-//		p->getOverheadFieldHomo(H);
-//		p->extractOdStripsFeatRect(d, fVecOnePlayLeft);
-		//p->extractOdGridsFeatRect(d, fVecOnePlayLeft);
-		//p->extractOdStripsFeatFldCrd(d, fVecOnePlayLeft);
-		p->extractOdGridsFeatFldCrd(d, fVecOnePlayLeft);
-		delete p;
-		p = new play(pIds[i]);
-		p->setUp();
-		d = rightDir;
-		//p->extractOdStripsFeature(d, fVecOnePlayRight);
-		//p->extractOdStripsFeatRect(d, fVecOnePlayRight);
-		//p->extractOdGridsFeatRect(d, fVecOnePlayRight);
-//		p->extractOdStripsFeatFldCrd(d, fVecOnePlayRight);
-		p->extractOdGridsFeatFldCrd(d, fVecOnePlayRight);
-		for(unsigned int j = 0; j < fVecOnePlayLeft.size(); ++j)
-			fVecOnePlay.push_back(fVecOnePlayLeft[j] - fVecOnePlayRight[j]);
-
-		fout << odLabels[i] << ",";
-		//vector<double> fVecOnePlayd;
-		int maxFVal = -1;
-		for(unsigned int j = 0; j < fVecOnePlay.size(); ++j)
-			if(abs(fVecOnePlay[j]) > maxFVal)
-				maxFVal = abs(fVecOnePlay[j]);
-		//cout << "maxFVal: " << maxFVal << endl;
-		if(maxFVal != 0)
-		{
-			for(unsigned int j = 0; j < (fVecOnePlay.size() - 1); ++j)
-				fout << (fVecOnePlay[j] + 0.0) /  (maxFVal + 0.0) << ",";
-			fout << (fVecOnePlay[fVecOnePlay.size() - 1] + 0.0)  /  (maxFVal + 0.0);
-		}
-		else
-		{
-			for(unsigned int j = 0; j < (fVecOnePlay.size() - 1); ++j)
-				fout << (fVecOnePlay[j] + 0.0) << ",";
-			fout << (fVecOnePlay[fVecOnePlay.size() - 1] + 0.0);
-		}
-
-//		for(unsigned int j = 0; j < fVecOnePlay.size(); ++j)
-//			fout << fVecOnePlay[j]  << ",";
-
-		fout << endl;
-		//fout << maxFVal << endl;
-//			p->computeFormDir(pTypesOfAllClasses[j], modelWt[j], featureNumEachPlay, (j + 1));
-//			fVecOnePlay.push_back(p->form->totalScore);//model score
-//			fVecOnePlay.push_back(1.0);//bias
-		//fVecsAllPlay.push_back(fVecOnePlay);
-	}
-
-	fout.close();
-	return;
 }
 
 void extracOdVidFeatsSvm()
@@ -241,11 +141,103 @@ void extracOdVidFeatsSvm()
 	return;
 }
 
+
+void extracOdVidFeatsRts(int gameId, vector<playId> &pIds)
+{
+	ostringstream convertGameId;
+	convertGameId << gameId ;
+	string gameIdStr = convertGameId.str();
+
+	if(gameId < 10)
+		gameIdStr = "0" + gameIdStr;
+	string odPIdsPath = "odGame" + gameIdStr;
+
+//	string odLabelFilePath = "randTreesTrainData/odGame" + gameIdStr;
+	string odLabelFilePath = "randTreesTrainData/odGame" + gameIdStr + "Rect";
+//	vector<playId> pIds;
+	vector<string> dirs, odLabels;
+
+	readOdLabels(odLabelFilePath, pIds, dirs, odLabels);
+
+	cout << "Computing feature vectors... " << endl;
+
+	//string featuresFile = "randTreesTrainData/featureVecsGame" + gameIdStr;
+	string featuresFile = "randTreesTrainData/featuresGame" + gameIdStr + "Rect";
+	ofstream fout(featuresFile.c_str());
+	vector<CvSize> gridSizes;
+	vector<Point2i> gridsNum;
+	gridSizes.push_back(cvSize(YardLinesDist * 6, YardLinesDist * 8));
+	gridsNum.push_back(Point2i(1, 2));
+	gridSizes.push_back(cvSize(YardLinesDist * 2, YardLinesDist * 2));
+	gridsNum.push_back(Point2i(3, 8));
+	gridSizes.push_back(cvSize(YardLinesDist, YardLinesDist));
+	gridsNum.push_back(Point2i(6, 16));
+
+	//compute feature vector for each play with all models
+	for(unsigned int i = 0; i < pIds.size(); ++i)
+	{
+		vector<int> fVecOnePlay, fVecOnePlayLeft, fVecOnePlayRight;
+		play *p = NULL;
+		cout << "gameId: " << pIds[i].gameId << " vidId: " << pIds[i].vidId << endl;
+		if (p != NULL)
+			delete p;
+		p = new play(pIds[i]);
+		p->setUp();
+
+		direction d = nonDir;
+//		p->extractOdGridsFeature(d, fVecOnePlay);
+		d = leftDir;
+		//p->extractOdStripsFeature(d, fVecOnePlayLeft);
+//		p->extractOdStripsFeatRect(d, fVecOnePlayLeft);
+//		p->extractOdGridsFeatRect(d, fVecOnePlayLeft);
+		p->extractOdGridsFeatRect(d, fVecOnePlayLeft, gridSizes, gridsNum);
+		//p->extractOdStripsFeatFldCrd(d, fVecOnePlayLeft);
+		//p->extractOdGridsFeatFldCrd(d, fVecOnePlayLeft);
+		delete p;
+		p = new play(pIds[i]);
+		p->setUp();
+		d = rightDir;
+		//p->extractOdStripsFeature(d, fVecOnePlayRight);
+//		p->extractOdStripsFeatRect(d, fVecOnePlayRight);
+//		p->extractOdGridsFeatRect(d, fVecOnePlayRight);
+		p->extractOdGridsFeatRect(d, fVecOnePlayRight, gridSizes, gridsNum);
+		//p->extractOdStripsFeatFldCrd(d, fVecOnePlayRight);
+		//p->extractOdGridsFeatFldCrd(d, fVecOnePlayRight);
+		for(unsigned int j = 0; j < fVecOnePlayLeft.size(); ++j)
+			fVecOnePlay.push_back(fVecOnePlayLeft[j] - fVecOnePlayRight[j]);
+
+		fout << odLabels[i] << ",";
+		int maxFVal = -1;
+		for(unsigned int j = 0; j < fVecOnePlay.size(); ++j)
+			if(abs(fVecOnePlay[j]) > maxFVal)
+				maxFVal = abs(fVecOnePlay[j]);
+		if(maxFVal != 0)
+		{
+			for(unsigned int j = 0; j < (fVecOnePlay.size() - 1); ++j)
+				fout << (fVecOnePlay[j] + 0.0) /  (maxFVal + 0.0) << ",";
+			fout << (fVecOnePlay[fVecOnePlay.size() - 1] + 0.0)  /  (maxFVal + 0.0);
+		}
+		else
+		{
+			for(unsigned int j = 0; j < (fVecOnePlay.size() - 1); ++j)
+				fout << (fVecOnePlay[j] + 0.0) << ",";
+			fout << (fVecOnePlay[fVecOnePlay.size() - 1] + 0.0);
+		}
+
+		fout << endl;
+	}
+
+	fout.close();
+	return;
+}
+
+
 //int main()
 //{
-//	extracOdVidFeatsRts(2);
-//	extracOdVidFeatsRts(8);
-////	extracOdVidFeatsRts(9);
+//	vector<playId> pIds;
+//	extracOdVidFeatsRts(2, pIds);
+////	extracOdVidFeatsRts(8, pIds);
+////	extracOdVidFeatsRts(9, pIds);
 ////	extracOdVidFeatsRts(10);
 //	return 1;
 //}

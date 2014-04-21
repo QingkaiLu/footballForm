@@ -27,9 +27,13 @@ using namespace cv;
 //losMethod == 2 => new los based on sheng's gradient los; losMethod == 1 => old los based on klt
 #define losMethod 1
 
+//rectLosMethod == 1 => rectified los box and los center are transformed the unrectified ones;
+//rectLosMethod == 2 => rectified los box and los center are found using the rectified foreground;
+#define rectLosMethod 2
+
 //yardLinesMethod == 1 => old detected yard lines and vanishing points;
 //yardLinesMethod == 2 => new detected yard lines and vanishing points
-#define yardLinesMethod 1
+#define yardLinesMethod 2
 
 //yardLnsDistMethod == 1 => closest distance between yard lines;
 // yardLnsDistMethod == 2 => average distance between yard lines
@@ -52,6 +56,8 @@ public:
 	void getGradientScrimLn();
 	//find the los bounding box where the players lined up
 	void findLosBndBox();
+	//find the los on the rectified foreground
+	void findLosOnRectFg(const Mat &homoMat);
 
 	//compute n top bounding boxes which have the longest path
 	void computeTopBoxes(unsigned int n, double boxXLen, double boxYLen, vector<playerBndBox> &topBoxes);
@@ -94,6 +100,8 @@ public:
 	void rectification();
 	void extractOdStripsFeatRect(direction dir, vector<int> &featureVec);
 	void extractOdGridsFeatRect(direction dir, vector<int> &featureVec);
+	void extractOdGridsFeatRect(direction dir, vector<int> &featureVec,
+			const vector<CvSize> &gridSizes, const vector<Point2i> gridsNum);
 
 	//get the coordinate from the overhead field model
 	void getOverheadFieldHomo(Mat &homoMat);
@@ -135,7 +143,7 @@ public:
 	vector<track> tracks;
 
 	Mat image, mosFrame;
-	Mat rectImage;
+	Mat rectImage, rectMosFrame;
 
 	struct rect recSearchRng;
 

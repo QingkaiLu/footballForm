@@ -48,7 +48,7 @@ int picWr()
 //		//w[i] = 1.0;
 //		w[i] = weight[i];
 
-	for(unsigned int i = 8; i < 11; ++i)
+	for(unsigned int i = 2; i < 11; ++i)
 	{
 		ostringstream convertGameId;
 		convertGameId << i;
@@ -103,10 +103,10 @@ int picWr()
 			//p.computeAllTracksDir();
 			//vector<double> f(12, 0.0);
 			p.setUp();
-//			p.computeDirLosArea();
+			p.computeDirLosArea();
 //			p.ellipseWrClassifier();
 //			p.computeFormDir(pTypes, percep.wAvg, percep.featureNum);
-			p.saveMosFrm();
+			//p.saveMosFrm();
 //			p.preDir = rightDir;
 //			p.totalScore = 1.0;
 //			p.getTrueDir();
@@ -232,12 +232,12 @@ int picWr()
 //int main()
 //{
 //	struct playId pId;
-//	pId.gameId = 2;
-//	pId.vidId = 4;
+//	pId.gameId = 9;
+//	pId.vidId = 7;
 //
 //	play p(pId);
 //	p.setUp();
-//	//p.rectification();
-//	Mat homoMat;
-//	p.getOverheadFieldHomo(homoMat);
+//	p.rectification();
+////	Mat homoMat;
+////	p.getOverheadFieldHomo(homoMat);
 //}
