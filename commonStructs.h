@@ -29,6 +29,9 @@
 #define scanXStep 5
 #define scanYStep 5
 
+#define featNumPerPlay 122*2
+#define fNumPerPlayOneSide 122
+
 //class playerBndBox;
 //#include "playerBndBox.h"
 

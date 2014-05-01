@@ -19,8 +19,10 @@ void drawFieldModel(Mat &fieldModel) {
 	}
 	//draw hash lines
 	for (int i = EndZoneWidth - 1; i < (FieldWidth - EndZoneWidth); i += HashLinesDist) {
-		line(fieldModel, Point2i(i, HashToSideLineDist - 1 - HashLinesLen * 0.5), Point2i(i, HashToSideLineDist - 1 + HashLinesLen * 0.5), CV_RGB(200, 200, 200), 2, 8, 0);
-		line(fieldModel, Point2i(i, (FieldLength - 1 - HashToSideLineDist) - HashLinesLen * 0.5), Point2i(i, (FieldLength - 1 - HashToSideLineDist) + HashLinesLen * 0.5), CV_RGB(200, 200, 200), 2, 8, 0);
+		line(fieldModel, Point2i(i, HashToSideLineDist - 1 - HashLinesLen * 0.5),
+				Point2i(i, HashToSideLineDist - 1 + HashLinesLen * 0.5), CV_RGB(200, 200, 200), 2, 8, 0);
+		line(fieldModel, Point2i(i, (FieldLength - 1 - HashToSideLineDist) - HashLinesLen * 0.5),
+				Point2i(i, (FieldLength - 1 - HashToSideLineDist) + HashLinesLen * 0.5), CV_RGB(200, 200, 200), 2, 8, 0);
 	}
 	return;
 }

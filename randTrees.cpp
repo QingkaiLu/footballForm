@@ -5,6 +5,7 @@
 #include <vector>
 #include <fstream>
 
+#include "commonStructs.h"
 #include "extractOdVidFeats.h"
 #include "randTrees.h"
 
@@ -12,77 +13,9 @@ using namespace cv;
 using namespace std;
 
 
-#define ATTRIBUTES_PER_SAMPLE 122
-#define INF std::numeric_limits<double>/*or float*/::infinity()
-#define NEGINF -1.0 * INF
-
-bool readData(const vector<string> &fileNames, vector<vector<double> > &features, vector<double> &labels)
-{
-	for(unsigned int i = 0; i < fileNames.size(); ++i)
-	{
-		cout << "reading " << fileNames[i] << endl;
-		ifstream fin(fileNames[i].c_str());
-		if(!fin.is_open())
-		{
-			cout << "Can't open file " << fileNames[i] << endl;
-			return false;
-		}
-
-		fin.seekg(0, ios::end);
-		if (fin.tellg() == 0) {
-			cout << "Empty file " << fileNames[i] << endl;
-			return false;
-		}
-		fin.seekg(0, ios::beg);
-		while(!fin.eof())
-		{
-//			string tmp;
-//			fin >> tmp;
-//			if(tmp.empty())
-//			{
-//				break;
-//			}
-			char oneLabel, comma;
-			fin >> oneLabel >> comma;
-
-			vector<double> featuresOneSample;
-			bool fileEnd = false;
-			for(int j = 0; j < ATTRIBUTES_PER_SAMPLE; ++j)
-			{
-				double oneFeature = NEGINF;
-				if(j < (ATTRIBUTES_PER_SAMPLE - 1) )
-					fin >> oneFeature >> comma;
-				else
-					fin >> oneFeature;
-				featuresOneSample.push_back(oneFeature);
-				if(oneFeature == NEGINF)
-				{
-					fileEnd = true;
-					break;
-				}
-			}
-
-			if(fileEnd)
-				break;
-
-			labels.push_back(double(oneLabel));
-			features.push_back(featuresOneSample);
-//			cout << oneLabel << " ";
-//			for(int j = 0; j < ATTRIBUTES_PER_SAMPLE; ++j)
-//			{
-//				cout << featuresOneSample[j] << " ";
-//			}
-//			cout << endl;
-
-		}
-
-
-	fin.close();
-
-	}
-
-	return true;
-}
+//#define featNumPerPlay 122
+//#define INF std::numeric_limits<double>/*or float*/::infinity()
+//#define NEGINF -1.0 * INF
 
 
 void splitOdSamples(const Mat &featureMat, const Mat &labelsMat,
@@ -196,7 +129,7 @@ void randTreeTrainTest(const vector<int> &trainGames, const vector<int> &testGam
 		if(trainGames[i] < 10)
 			gameIdStr = "0" + gameIdStr;
 //		string path = "randTreesTrainData/featureVecsGame" + gameIdStr;
-		string path = "randTreesTrainData/featuresGame" + gameIdStr + "Rect";
+		string path = "randTreesTrainData/features/featuresGame" + gameIdStr + "Rect";
 		trainGameFilePaths.push_back(path);
 	}
 
@@ -209,40 +142,40 @@ void randTreeTrainTest(const vector<int> &trainGames, const vector<int> &testGam
 		if(testGames[i] < 10)
 			gameIdStr = "0" + gameIdStr;
 //		string path = "randTreesTrainData/featureVecsGame" + gameIdStr;
-		string path = "randTreesTrainData/featuresGame" + gameIdStr + "Rect";
+		string path = "randTreesTrainData/features/featuresGame" + gameIdStr + "Rect";
 		testGameFilePaths.push_back(path);
 	}
 	vector<vector<double> > trainFeatures, testFeatures;
 	vector<double> trainLabels, testLabels;
-	readData(trainGameFilePaths, trainFeatures, trainLabels);
-	readData(testGameFilePaths, testFeatures, testLabels);
+	readOdFeatData(trainGameFilePaths, trainFeatures, trainLabels, featNumPerPlay);
+	readOdFeatData(testGameFilePaths, testFeatures, testLabels, featNumPerPlay);
 
-	Mat trainFeaturesMat = Mat(trainFeatures.size(), ATTRIBUTES_PER_SAMPLE, CV_32FC1);
+	Mat trainFeaturesMat = Mat(trainFeatures.size(), featNumPerPlay, CV_32FC1);
 	Mat trainLabelsMat = Mat(trainLabels.size(), 1, CV_32FC1);
 
 	for(unsigned int i = 0; i < trainLabels.size(); ++i)
 	{
 		trainLabelsMat.at<float>(i, 0) = trainLabels[i];
 
-		for(unsigned int j = 0; j < ATTRIBUTES_PER_SAMPLE; ++j)
+		for(unsigned int j = 0; j < featNumPerPlay; ++j)
 			trainFeaturesMat.at<float>(i, j) = trainFeatures[i][j];
 	}
 
-	Mat testFeaturesMat = Mat(testFeatures.size(), ATTRIBUTES_PER_SAMPLE, CV_32FC1);
+	Mat testFeaturesMat = Mat(testFeatures.size(), featNumPerPlay, CV_32FC1);
 	Mat testLabelsMat = Mat(testLabels.size(), 1, CV_32FC1);
 
 	for(unsigned int i = 0; i < testLabels.size(); ++i)
 	{
 		testLabelsMat.at<float>(i, 0) = testLabels[i];
 
-		for(unsigned int j = 0; j < ATTRIBUTES_PER_SAMPLE; ++j)
+		for(unsigned int j = 0; j < featNumPerPlay; ++j)
 			testFeaturesMat.at<float>(i, j) = testFeatures[i][j];
 	}
 
 
-	Mat varType = Mat(ATTRIBUTES_PER_SAMPLE + 1, 1, CV_8U );
+	Mat varType = Mat(featNumPerPlay + 1, 1, CV_8U );
 	varType.setTo(Scalar(CV_VAR_NUMERICAL) );
-	varType.at<uchar>(ATTRIBUTES_PER_SAMPLE, 0) = CV_VAR_CATEGORICAL;
+	varType.at<uchar>(featNumPerPlay, 0) = CV_VAR_CATEGORICAL;
 
 	CvRTParams params = CvRTParams(10,10,0,false,15,0,true,4,1,0.01f,CV_TERMCRIT_ITER);
 
@@ -254,7 +187,7 @@ void randTreeTrainTest(const vector<int> &trainGames, const vector<int> &testGam
 	Mat varImp = rtree->getVarImportance();
 	double totalImp = .0;
 	for(int i = 0; i < varImp.cols; ++i)
-	//for(int i = 0; i < ATTRIBUTES_PER_SAMPLE; ++i)
+	//for(int i = 0; i < featNumPerPlay; ++i)
 	{
 		cout << i << " " << varImp.at<float>(0, i) << endl;
 		totalImp += varImp.at<float>(0, i);
@@ -309,7 +242,7 @@ void randTreeTrainTest(const vector<int> &trainGames, const vector<int> &testGam
 		if(trainGames[i] < 10)
 			gameIdStr = "0" + gameIdStr;
 //		string path = "randTreesTrainData/featureVecsGame" + gameIdStr;
-		string path = "randTreesTrainData/featuresGame" + gameIdStr + "Rect";
+		string path = "randTreesTrainData/features/featuresGame" + gameIdStr + "Rect";
 		trainGameFilePaths.push_back(path);
 	}
 
@@ -322,40 +255,40 @@ void randTreeTrainTest(const vector<int> &trainGames, const vector<int> &testGam
 		if(testGames[i] < 10)
 			gameIdStr = "0" + gameIdStr;
 //		string path = "randTreesTrainData/featureVecsGame" + gameIdStr;
-		string path = "randTreesTrainData/featuresGame" + gameIdStr + "Rect";
+		string path = "randTreesTrainData/features/featuresGame" + gameIdStr + "Rect";
 		testGameFilePaths.push_back(path);
 	}
 	vector<vector<double> > trainFeatures, testFeatures;
 	vector<double> trainLabels, testLabels;
-	readData(trainGameFilePaths, trainFeatures, trainLabels);
-	readData(testGameFilePaths, testFeatures, testLabels);
+	readOdFeatData(trainGameFilePaths, trainFeatures, trainLabels, featNumPerPlay);
+	readOdFeatData(testGameFilePaths, testFeatures, testLabels, featNumPerPlay);
 
-	Mat trainFeaturesMat = Mat(trainFeatures.size(), ATTRIBUTES_PER_SAMPLE, CV_32FC1);
+	Mat trainFeaturesMat = Mat(trainFeatures.size(), featNumPerPlay, CV_32FC1);
 	Mat trainLabelsMat = Mat(trainLabels.size(), 1, CV_32FC1);
 
 	for(unsigned int i = 0; i < trainLabels.size(); ++i)
 	{
 		trainLabelsMat.at<float>(i, 0) = trainLabels[i];
 
-		for(unsigned int j = 0; j < ATTRIBUTES_PER_SAMPLE; ++j)
+		for(unsigned int j = 0; j < featNumPerPlay; ++j)
 			trainFeaturesMat.at<float>(i, j) = trainFeatures[i][j];
 	}
 
-	Mat testFeaturesMat = Mat(testFeatures.size(), ATTRIBUTES_PER_SAMPLE, CV_32FC1);
+	Mat testFeaturesMat = Mat(testFeatures.size(), featNumPerPlay, CV_32FC1);
 	Mat testLabelsMat = Mat(testLabels.size(), 1, CV_32FC1);
 
 	for(unsigned int i = 0; i < testLabels.size(); ++i)
 	{
 		testLabelsMat.at<float>(i, 0) = testLabels[i];
 
-		for(unsigned int j = 0; j < ATTRIBUTES_PER_SAMPLE; ++j)
+		for(unsigned int j = 0; j < featNumPerPlay; ++j)
 			testFeaturesMat.at<float>(i, j) = testFeatures[i][j];
 	}
 
 
-	Mat varType = Mat(ATTRIBUTES_PER_SAMPLE + 1, 1, CV_8U );
+	Mat varType = Mat(featNumPerPlay + 1, 1, CV_8U );
 	varType.setTo(Scalar(CV_VAR_NUMERICAL) );
-	varType.at<uchar>(ATTRIBUTES_PER_SAMPLE, 0) = CV_VAR_CATEGORICAL;
+	varType.at<uchar>(featNumPerPlay, 0) = CV_VAR_CATEGORICAL;
 
 	CvRTParams params = CvRTParams(10,10,0,false,15,0,true,4,1000,0.01f,CV_TERMCRIT_ITER);
 
@@ -366,7 +299,7 @@ void randTreeTrainTest(const vector<int> &trainGames, const vector<int> &testGam
 	Mat varImp = rtree->getVarImportance();
 	double totalImp = .0;
 	for(int i = 0; i < varImp.cols; ++i)
-	//for(int i = 0; i < ATTRIBUTES_PER_SAMPLE; ++i)
+	//for(int i = 0; i < featNumPerPlay; ++i)
 	{
 		cout << i << " " << varImp.at<float>(0, i) << endl;
 		totalImp += varImp.at<float>(0, i);
@@ -428,26 +361,25 @@ void randTreeLeavePlayOut(const vector<int> &trainTestGames, const vector<vector
 		if(trainTestGames[i] < 10)
 			gameIdStr = "0" + gameIdStr;
 //		string path = "randTreesTrainData/featureVecsGame" + gameIdStr;
-		string path = "randTreesTrainData/featuresGame" + gameIdStr + "Rect";
+		string path = "randTreesTrainData/features/featuresGame" + gameIdStr + "Rect";
 		trainTestGamePaths.push_back(path);
 	}
 
 	vector<vector<double> > trainTestFeats;
 	vector<double> trainTestLabs;
-	readData(trainTestGamePaths, trainTestFeats, trainTestLabs);
+	readOdFeatData(trainTestGamePaths, trainTestFeats, trainTestLabs, featNumPerPlay);
 
 
 	int errPlays = 0;
 	for(unsigned int k = 0; k < trainTestLabs.size(); ++k)
 	{
-		Mat trainFeaturesMat = Mat(trainTestFeats.size() - 1, ATTRIBUTES_PER_SAMPLE, CV_32FC1);
+		Mat trainFeaturesMat = Mat(trainTestFeats.size() - 1, featNumPerPlay, CV_32FC1);
 		Mat trainLabelsMat = Mat(trainTestLabs.size() - 1, 1, CV_32FC1);
 
-		Mat testFeaturesMat = Mat(1, ATTRIBUTES_PER_SAMPLE, CV_32FC1);
+		Mat testFeaturesMat = Mat(1, featNumPerPlay, CV_32FC1);
 		Mat testLabelsMat = Mat(1, 1, CV_32FC1);
 //
 		playId pId;
-
 		for(unsigned int i = 0; i < trainTestLabs.size(); ++i)
 		{
 			if(i == k)
@@ -457,7 +389,7 @@ void randTreeLeavePlayOut(const vector<int> &trainTestGames, const vector<vector
 				//cout << "Leave Game " << pId.gameId << ", play " << pId.vidId << " out..." << endl;
 				testLabelsMat.at<float>(0, 0) = trainTestLabs[i];
 
-				for(unsigned int j = 0; j < ATTRIBUTES_PER_SAMPLE; ++j)
+				for(unsigned int j = 0; j < featNumPerPlay; ++j)
 					testFeaturesMat.at<float>(0, j) = trainTestFeats[i][j];
 			}
 			else
@@ -469,14 +401,14 @@ void randTreeLeavePlayOut(const vector<int> &trainTestGames, const vector<vector
 					idx = i;
 				trainLabelsMat.at<float>(idx, 0) = trainTestLabs[i];
 
-				for(unsigned int j = 0; j < ATTRIBUTES_PER_SAMPLE; ++j)
+				for(unsigned int j = 0; j < featNumPerPlay; ++j)
 					trainFeaturesMat.at<float>(idx, j) = trainTestFeats[i][j];
 			}
 		}
 
-		Mat varType = Mat(ATTRIBUTES_PER_SAMPLE + 1, 1, CV_8U );
+		Mat varType = Mat(featNumPerPlay + 1, 1, CV_8U );
 		varType.setTo(Scalar(CV_VAR_NUMERICAL) );
-		varType.at<uchar>(ATTRIBUTES_PER_SAMPLE, 0) = CV_VAR_CATEGORICAL;
+		varType.at<uchar>(featNumPerPlay, 0) = CV_VAR_CATEGORICAL;
 
 		CvRTParams params = CvRTParams(10,10,0,false,15,0,true,4,100,0.01f,CV_TERMCRIT_ITER);
 
@@ -488,7 +420,7 @@ void randTreeLeavePlayOut(const vector<int> &trainTestGames, const vector<vector
 		Mat varImp = rtree->getVarImportance();
 		double totalImp = .0;
 		for(int i = 0; i < varImp.cols; ++i)
-		//for(int i = 0; i < ATTRIBUTES_PER_SAMPLE; ++i)
+		//for(int i = 0; i < featNumPerPlay; ++i)
 		{
 			cout << i << " " << varImp.at<float>(0, i) << endl;
 			totalImp += varImp.at<float>(0, i);
@@ -512,13 +444,237 @@ void randTreeLeavePlayOut(const vector<int> &trainTestGames, const vector<vector
 			cout << "Detected as: " << (char)result << endl;
 			cout << "True label: " << (char)testLabelsMat.at<float>(0, 0) << endl;
 		}
+//		else
+//		{
+//			cout << "Game " << pId.gameId << ", play " << pId.vidId << " is correct. " << endl;
+//		}
 
 	}
 
 	cout << "Leave out plays overall accuracy: " << (1.0 - errPlays / (double)trainTestLabs.size() ) << endl;
 
+}
+
+
+void randTreeLeavePlayOutExp(const vector<int> &trainTestGames, const vector<vector<playId> > &pIdsAllGames, int odExpMode)
+{
+	vector<playId> pIdsAll;
+	for(unsigned int i = 0; i < pIdsAllGames.size(); ++i)
+	{
+		for(unsigned int j = 0; j < pIdsAllGames[i].size(); ++j)
+			pIdsAll.push_back(pIdsAllGames[i][j]);
+	}
+
+
+	vector<string> featsGtOdPaths, featsLeftOPaths, featsLeftDPaths;
+	for(unsigned int i = 0; i < trainTestGames.size(); ++i)
+	{
+		ostringstream convertGameId;
+		convertGameId << trainTestGames[i] ;
+		string gameIdStr = convertGameId.str();
+
+		if(trainTestGames[i] < 10)
+			gameIdStr = "0" + gameIdStr;
+
+		string featsExpGtOd = "randTreesTrainData/features/featsGame" + gameIdStr + "RectExp";
+		string featsExpLeftO = "randTreesTrainData/features/featsGame" + gameIdStr + "RectExpLeftO";
+		string featsExpLeftD = "randTreesTrainData/features/featsGame" + gameIdStr + "RectExpLeftD";
+		featsGtOdPaths.push_back(featsExpGtOd);
+		featsLeftOPaths.push_back(featsExpLeftO);
+		featsLeftDPaths.push_back(featsExpLeftD);
+	}
+
+	vector<vector<double> > featsGtOd, featsLeftO, featsLeftD;
+	vector<double> labelsGtOd, labelsLeftO, labelsLeftD;
+	readOdFeatData(featsGtOdPaths, featsGtOd, labelsGtOd, featNumPerPlay);
+	readOdFeatData(featsLeftOPaths, featsLeftO, labelsLeftO, featNumPerPlay);
+	readOdFeatData(featsLeftDPaths, featsLeftD, labelsLeftD, featNumPerPlay);
+
+	int errPlays = 0;
+	int oneAgreeNum = 0, bothAgreeNum = 0,
+			bothNotAgreeNum = 0;
+
+	int oneAgreeErrNum = 0, bothAgreeErrNum = 0,
+			bothNotAgreeErrNum = 0;
+
+	for(unsigned int k = 0; k < labelsGtOd.size(); ++k)
+	{
+		Mat trainFeaturesMat = Mat(featsGtOd.size() - 1, featNumPerPlay, CV_32FC1);
+		Mat trainLabelsMat = Mat(labelsGtOd.size() - 1, 1, CV_32FC1);
+
+		Mat testFeatsMatLeftO = Mat(1, featNumPerPlay, CV_32FC1);
+		Mat testLabelsMatLeftO = Mat(1, 1, CV_32FC1);
+
+		Mat testFeatsMatLeftD= Mat(1, featNumPerPlay, CV_32FC1);
+		Mat testLabelsMatLeftD = Mat(1, 1, CV_32FC1);
+
+		Mat testFeatsMatGtOd= Mat(1, featNumPerPlay, CV_32FC1);
+		Mat testLabelsMatGtOd = Mat(1, 1, CV_32FC1);
+//
+		playId pId;
+		for(unsigned int i = 0; i < labelsGtOd.size(); ++i)
+		{
+			if(i == k)
+			{
+				pId = pIdsAll[i];
+
+				//cout << "Leave Game " << pId.gameId << ", play " << pId.vidId << " out..." << endl;
+				testLabelsMatLeftO.at<float>(0, 0) = labelsLeftO[i];
+				for(unsigned int j = 0; j < featNumPerPlay; ++j)
+					testFeatsMatLeftO.at<float>(0, j) = featsLeftO[i][j];
+
+				testLabelsMatLeftD.at<float>(0, 0) = labelsLeftD[i];
+				for(unsigned int j = 0; j < featNumPerPlay; ++j)
+					testFeatsMatLeftD.at<float>(0, j) = featsLeftD[i][j];
+
+				testLabelsMatGtOd.at<float>(0, 0) = labelsGtOd[i];
+				for(unsigned int j = 0; j < featNumPerPlay; ++j)
+					testFeatsMatGtOd.at<float>(0, j) = featsGtOd[i][j];
+			}
+			else
+			{
+				int idx = -1;
+				if(i > k)
+					idx = i - 1;
+				else
+					idx = i;
+				trainLabelsMat.at<float>(idx, 0) = labelsGtOd[i];
+
+				for(unsigned int j = 0; j < featNumPerPlay; ++j)
+					trainFeaturesMat.at<float>(idx, j) = featsGtOd[i][j];
+			}
+		}
+
+		Mat varType = Mat(featNumPerPlay + 1, 1, CV_8U );
+		varType.setTo(Scalar(CV_VAR_NUMERICAL) );
+		varType.at<uchar>(featNumPerPlay, 0) = CV_VAR_CATEGORICAL;
+
+		CvRTParams params = CvRTParams(10,10,0,false,15,0,true,4,1000,0.01f,CV_TERMCRIT_ITER);
+
+		CvRTrees* rtree = new CvRTrees;
+		rtree->train(trainFeaturesMat, CV_ROW_SAMPLE, trainLabelsMat,
+					 Mat(), Mat(), varType, Mat(), params);
+
+#if VarImportance == 1
+		Mat varImp = rtree->getVarImportance();
+		double totalImp = .0;
+		for(int i = 0; i < varImp.cols; ++i)
+		//for(int i = 0; i < featNumPerPlay; ++i)
+		{
+			cout << i << " " << varImp.at<float>(0, i) << endl;
+			totalImp += varImp.at<float>(0, i);
+		}
+		cout << "totalImp: " << totalImp << endl;
+#endif
+
+#if Proximities == 1
+	vector<Mat> dMats, oMats;
+	splitOdSamples(testFeaturesMat, testLabelsMat, dMats, oMats);
+	getOdSamplesProx(dMats, oMats, "odProximities", rtree);
+#endif
+	if(odExpMode == 2)
+	{
+		double resultLeftO = rtree->predict(testFeatsMatLeftO, Mat());
+//		cout << "resultLeftO " << resultLeftO << endl;
+		bool leftOErr = false;
+		if (fabs(resultLeftO - (double)'o')>= FLT_EPSILON)
+			leftOErr = true;
+
+		double resultLeftD = rtree->predict(testFeatsMatLeftD, Mat());
+		bool leftDErr = false;
+		if (fabs(resultLeftD - (double)'d')>= FLT_EPSILON)
+			leftDErr = true;
+
+		double result = -1.0;
+
+		if(leftOErr == leftDErr)
+		{
+			double leftOProb = rtree->predict_prob(testFeatsMatLeftO);
+			if(leftOProb < 0.5)
+				leftOProb = 1 - leftOProb;
+			double leftDProb = rtree->predict_prob(testFeatsMatLeftD);
+			if(leftDProb < 0.5)
+				leftDProb = 1 - leftDProb;
+			if(leftOProb > leftDProb)
+				result = resultLeftO;
+			else
+				result = resultLeftD;
+
+			if(leftOErr)
+				++bothNotAgreeNum;
+			else
+				++bothAgreeNum;
+
+			if (fabs(result - testLabelsMatLeftO.at<float>(0, 0))>= FLT_EPSILON)
+			{
+				if(leftOErr)
+					++bothNotAgreeErrNum;
+				else
+					++bothAgreeErrNum;
+			}
+
+//			cout << "leftOErr: " << leftOErr << endl;
+//			cout << "leftOProb: " << leftOProb << endl;
+//			cout << "leftDProb: " << leftDProb << endl;
+//			if(leftOErr)
+//				cout << "**********" << endl;
+//			result = testLabelsMatLeftO.at<float>(0, 0);
+		}
+		else
+		{
+			//cout << "different" << endl;
+			if(leftOErr)
+				result = resultLeftO;
+			if(leftDErr)
+				result = resultLeftD;
+
+			++oneAgreeNum;
+
+			if (fabs(result - testLabelsMatLeftO.at<float>(0, 0))>= FLT_EPSILON)
+				++oneAgreeErrNum;
+
+			//result = testLabelsMatLeftO.at<float>(0, 0);
+		}
+
+		if (fabs(result - testLabelsMatLeftO.at<float>(0, 0))>= FLT_EPSILON)
+		{
+			++errPlays;
+			cout << "Game " << pId.gameId << ", play " << pId.vidId << " is wrong. " << endl;
+			cout << "Detected as: " << (char)result << endl;
+			cout << "True label: " << (char)testLabelsMatLeftO.at<float>(0, 0) << endl;
+		}
+
+	}
+	else if(odExpMode == 1)
+	{
+		double result = rtree->predict(testFeatsMatGtOd);
+//		double resultProb = rtree->predict_prob(testFeatsMatGtOd);
+//		cout << (char)testLabelsMatLeftO.at<float>(0, 0) << " " << resultProb << endl;
+		if (fabs(result - testLabelsMatLeftO.at<float>(0, 0))>= FLT_EPSILON)
+		{
+			++errPlays;
+			cout << "Game " << pId.gameId << ", play " << pId.vidId << " is wrong. " << endl;
+			cout << "Detected as: " << (char)result << endl;
+			cout << "True label: " << (char)testLabelsMatLeftO.at<float>(0, 0) << endl;
+		}
+	}
+
+	}
+
+	cout << "Leave out plays overall accuracy: " << (1.0 - errPlays / (double)labelsGtOd.size() ) << endl;
+	if(odExpMode == 2)
+	{
+	cout << "oneAgreeNum: " <<  oneAgreeNum << endl;
+	cout << "oneAgree Acc: " << 1.0 - (double)oneAgreeErrNum / (double)oneAgreeNum << endl;
+	cout << "bothAgreeNum: " <<  bothAgreeNum << endl;
+	cout << "bothAgree Acc: " << 1.0 -  (double)bothAgreeErrNum / (double)bothAgreeNum << endl;
+	cout << "bothNotAgreeNum: " <<  bothNotAgreeNum << endl;
+	cout << "bothNotAgree Acc: " << 1.0 -  (double)bothNotAgreeErrNum / (double)bothNotAgreeNum << endl;
+	}
 
 }
+
+
 
 void leaveGamesOutTest(const vector<int> &games)
 {
@@ -554,7 +710,7 @@ void leaveGamesOutTest(const vector<int> &games)
 	}
 }
 
-void leavePlayOutTest(const std::vector<int> &games)
+void leavePlayOutTest(const vector<int> &games, int expMode, int odExpMode)
 {
 //	int games[3] = {2, 8, 9};//, 10};
 
@@ -564,47 +720,36 @@ void leavePlayOutTest(const std::vector<int> &games)
 	for(unsigned int i = 0; i < games.size(); ++i)
 	{
 		vector<playId> pIds;
-		extracOdVidFeatsRts(games[i], pIds);
+		//extracOdVidFeatsRts(games[i], pIds);
+		getPlayIds(games[i], pIds);
 		pIdsTestGames.push_back(pIds);
 		trainTestGames.push_back(games[i]);
 	}
 
-	randTreeLeavePlayOut(trainTestGames, pIdsTestGames);
+	if(expMode == 0)
+		randTreeLeavePlayOut(trainTestGames, pIdsTestGames);
+	else if(expMode == 1)
+		randTreeLeavePlayOutExp(trainTestGames, pIdsTestGames, odExpMode);
 
 }
 
 int main()
+//int randTrewes()
 {
 	vector<int> games;
 	games.push_back(2);
 	games.push_back(8);
 	games.push_back(9);
+	games.push_back(10);
+
+	int expMode = 1;
+	int odExpMode = 2;
+	int fMode = 2;
+
+	extractFeatures(games, expMode, fMode);
 
 //	leaveGamesOutTest(games);
-//	leavePlayOutTest(games);
-
-//	extracOdVidFeatsRts(2);
-//	extracOdVidFeatsRts(8);
-//	extracOdVidFeatsRts(9);
-
-//	vector<playId> pIds;
-//	extracOdVidFeatsRts(2, pIds);
-//	pIds.clear();
-//	extracOdVidFeatsRts(8, pIds);
-//	pIds.clear();
-//	extracOdVidFeatsRts(9, pIds);
-
-	vector<int> trainGames, testGames;
-	trainGames.push_back(2);
-	trainGames.push_back(8);
-	trainGames.push_back(9);
-//	trainGames.push_back(10);
-	testGames.push_back(2);
-	testGames.push_back(8);
-	testGames.push_back(9);
-//	testGames.push_back(10);
-	randTreeTrainTest(trainGames, testGames);
-
+	leavePlayOutTest(games, expMode, odExpMode);
 
 	return 1;
 }

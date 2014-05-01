@@ -488,7 +488,8 @@ void play::findLosBndBox()
 
 void play::findLosOnRectFg(const Mat &homoMat)
 {
-	struct rect imgBnd, imgBndRect;
+//	struct rect imgBnd, imgBndRect;
+	struct rect imgBnd;
 	imgBnd.a = Point2d(.0, .0);
 	imgBnd.b = Point2d(.0, imgYLen - 1);
 	imgBnd.c = Point2d(imgXLen - 1, imgYLen - 1);
@@ -541,6 +542,14 @@ void play::findLosOnRectFg(const Mat &homoMat)
 				rectScrimLn.d = Point2d(rightX, lowY);
 			}
 		}
+}
+
+
+int play::getLosCntIdx()
+{
+	double distUpHashToLosY = rectScrimCnt.y - HashToSideLineDist;
+	int losCntIdx = distUpHashToLosY / ((FieldLength - 2 * HashToSideLineDist) / (double)losCntBins);
+	return losCntIdx;
 }
 
 bool readTrks(string filePath, vector<track>& trks)
@@ -2310,7 +2319,7 @@ void play::extractOdGridsFeatRect(direction dir, vector<int> &featureVec)
 }
 
 void play::extractOdGridsFeatRect(direction dir, vector<int> &featureVec,
-		const vector<CvSize> &gridSizes, const vector<Point2i> gridsNum)
+		const vector<CvSize> &gridSizes, const vector<Point2i> gridsNum, int expMode)
 {
 
 	rectification();
@@ -2369,22 +2378,67 @@ void play::extractOdGridsFeatRect(direction dir, vector<int> &featureVec,
 				scanR.c = Point2d(maxYardLnXCoord, upY);
 				scanR.d = Point2d(maxYardLnXCoord, lowY);
 
+				if(expMode)
+				{
+	//				Point2d scanRCnt = 0.25 * (scanR.a + scanR.b + scanR.c + scanR.d);
+					bool insideFld = false, visible = false;
 
-				for(int y = lowY; y < upY; ++y)
-					for(int x = minYardLnXCoord; x < maxYardLnXCoord; ++x)
+	//				if(scanRCnt.x >= 0 && scanRCnt.x < FieldWidth &&
+	//						scanRCnt.y >= 0 && scanRCnt.y < FieldLength)
+	//					outsideFld = false;
+					if(scanR.a.x >= 0 && scanR.a.x < FieldWidth &&
+							scanR.a.y >= 0 && scanR.a.y < FieldLength)
+						insideFld = true;
+					if(scanR.b.x >= 0 && scanR.b.x < FieldWidth &&
+							scanR.b.y >= 0 && scanR.b.y < FieldLength)
+						insideFld = true;
+					if(scanR.c.x >= 0 && scanR.c.x < FieldWidth &&
+							scanR.c.y >= 0 && scanR.c.y < FieldLength)
+						insideFld = true;
+					if(scanR.d.x >= 0 && scanR.d.x < FieldWidth &&
+							scanR.d.y >= 0 && scanR.d.y < FieldLength)
+						insideFld = true;
+
+					if(isPntInsideRect(scanR.a, imgBndRect) || isPntInsideRect(scanR.b, imgBndRect)
+							|| isPntInsideRect(scanR.c, imgBndRect) || isPntInsideRect(scanR.d, imgBndRect))
+	//				if(isPntInsideRect(scanRCnt, imgBndRect))
+						visible = true;
+
+					if(!insideFld)
+						fgPixelsNum = -2;
+					else if(!visible)
+						fgPixelsNum = -1;
+					else
 					{
-						if( y < 0 || y >= FieldLength)
-							continue;
-						if( x < 0 || x >= FieldWidth)
-							continue;
-						const Point3_<uchar>* p = rectImage.ptr<Point3_<uchar> >(y, x);
-						if(int(p->z) == 255)
-						{
-		//					Point2d pnt = Point2d(x, y);
-		//					if((pnt.x >= minYardLnXCoord) && (pnt.x < maxYardLnXCoord))
-								++fgPixelsNum;
-						}
+						for(int y = lowY; y < upY; ++y)
+							for(int x = minYardLnXCoord; x < maxYardLnXCoord; ++x)
+							{
+								if( y < 0 || y >= FieldLength)
+									continue;
+								if( x < 0 || x >= FieldWidth)
+									continue;
+								const Point3_<uchar>* p = rectImage.ptr<Point3_<uchar> >(y, x);
+								if(int(p->z) == 255)
+										++fgPixelsNum;
+							}
 					}
+				}
+				else
+				{
+					for(int y = lowY; y < upY; ++y)
+							for(int x = minYardLnXCoord; x < maxYardLnXCoord; ++x)
+							{
+								if( y < 0 || y >= FieldLength)
+									continue;
+								if( x < 0 || x >= FieldWidth)
+									continue;
+								const Point3_<uchar>* p = rectImage.ptr<Point3_<uchar> >(y, x);
+								if(int(p->z) == 255)
+										++fgPixelsNum;
+							}
+				}
+
+
 				scanRects.push_back(scanR);
 				featureVec.push_back(fgPixelsNum);
 

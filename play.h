@@ -39,6 +39,9 @@ using namespace cv;
 // yardLnsDistMethod == 2 => average distance between yard lines
 #define yardLnsDistMethod 2
 
+//number of bins of the los cnt between two hash lines
+#define losCntBins 3
+
 
 class wrPicStrModel;
 class playerBndBox;
@@ -58,6 +61,7 @@ public:
 	void findLosBndBox();
 	//find the los on the rectified foreground
 	void findLosOnRectFg(const Mat &homoMat);
+	int getLosCntIdx();
 
 	//compute n top bounding boxes which have the longest path
 	void computeTopBoxes(unsigned int n, double boxXLen, double boxYLen, vector<playerBndBox> &topBoxes);
@@ -100,8 +104,10 @@ public:
 	void rectification();
 	void extractOdStripsFeatRect(direction dir, vector<int> &featureVec);
 	void extractOdGridsFeatRect(direction dir, vector<int> &featureVec);
+	//expMode == 0: no expectation
+	//expMode == 1: with expectation
 	void extractOdGridsFeatRect(direction dir, vector<int> &featureVec,
-			const vector<CvSize> &gridSizes, const vector<Point2i> gridsNum);
+			const vector<CvSize> &gridSizes, const vector<Point2i> gridsNum, int expMode);
 
 	//get the coordinate from the overhead field model
 	void getOverheadFieldHomo(Mat &homoMat);
@@ -128,6 +134,9 @@ public:
 	//los after rectification
 	struct rect rectScrimLn;
 	Point2d rectLos[2];
+
+	//rectified image boundary
+	struct rect imgBndRect;
 
 
 	string scrimLnsKltFilePath, scrimLnsGradFilePath;
