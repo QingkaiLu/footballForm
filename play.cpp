@@ -47,11 +47,13 @@ play::play(struct playId p)
 	scrimLnsKltFilePath = "scrimLine/Game" + gameIdStr + "/scrimLinesPredMos";
 	scrimLnsGradFilePath = "scrimLine/Game" + gameIdStr + "/losPredMos/video0" + vidIdxStr + ".glos4";
 	trksFilePath = "TracksPredMos/Game" + gameIdStr + "/Game" + gameIdStr + "_video0" + vidIdxStr;
+	mosImgPath = "predMosImages/Game" + gameIdStr + "/vid" + vidIdxStr + ".jpg";
 #elif predMos == 0
 	mosFilePath = "Mos/Game" + gameIdStr  + "/mos_id_new.txt";
 	scrimLnsKltFilePath = "scrimLine/Game" + gameIdStr + "/scrimLines";
 	scrimLnsGradFilePath = "scrimLine/Game" + gameIdStr + "/losTrueMos/video0" + vidIdxStr + ".glos4";
 	trksFilePath = "TracksCamFlt/Game" + gameIdStr + "/Game" + gameIdStr + "_video0" + vidIdxStr;
+	mosImgPath = "mosImages/Game" + gameIdStr + "/vid" + vidIdxStr + ".jpg";
 #endif
 
 
@@ -71,7 +73,7 @@ play::play(struct playId p)
 	fgImgPath = "fgMosImages/Game" + gameIdStr + "/video0" + vidIdxStr +".bmp";
 	//fgImgPath = "randTreesTrainData/Game" + gameIdStr + "/annotMosFgImages/video0" + vidIdxStr +".bmp";
 	videoPath = "../videos/Game" + gameIdStr + "/Game" + gameIdStr + "_video0" + vidIdxStr +".avi";
-	mosImgPath = "mosImages/Game" + gameIdStr + "/vid" + vidIdxStr + ".jpg";
+//	mosImgPath = "mosImages/Game" + gameIdStr + "/vid" + vidIdxStr + ".jpg";
 	image = imread(fgImgPath.c_str(), CV_LOAD_IMAGE_COLOR);
 	mosFrame = imread(mosImgPath.c_str(), CV_LOAD_IMAGE_COLOR);
 //	image.create(imgYLen, imgXLen, CV_32FC3 );
@@ -512,8 +514,10 @@ void play::findLosOnRectFg(const Mat &homoMat)
 			Point2d scanRectCnt = Point2d(xCnt, yCnt);
 			if(!isPntInsideRect(scanRectCnt, imgBndRect))
 				continue;
-			double lowY = yCnt - 2 * YardLinesDist;
-			double upY = yCnt + 2 * YardLinesDist;
+//			double lowY = yCnt - 2 * YardLinesDist;
+//			double upY = yCnt + 2 * YardLinesDist;
+			double lowY = yCnt - YardLinesDist;
+			double upY = yCnt + YardLinesDist;
 			double leftX = xCnt - 0.5 * YardLinesDist;
 			double rightX = xCnt + 0.5 * YardLinesDist;
 			int fgPixelsNum = 0;
@@ -1871,7 +1875,7 @@ void play::saveMosFrm()
 //		mosImgsVidIdxStr = "00" + mosImgsVidIdxStr;
 //	else if(mosImgsVidIdx < 100 )
 //		mosImgsVidIdxStr = "0" + mosImgsVidIdxStr;
-
+//
 //	plotPath = "mosImages/Game" + gameIdStr + "/od/vid" + mosImgsVidIdxStr + ".jpg";
 //	string nonOdPlotPath = "mosImages/Game" + gameIdStr + "/nonOd/vid" + mosImgsVidIdxStr + ".jpg";
 //	if(trueDir != nonDir)
@@ -1881,6 +1885,19 @@ void play::saveMosFrm()
 
 //	plotPath = "mosImages/Game" + gameIdStr + "/000" + mosImgsVidIdxStr + ".jpg";
 	imwrite(mosImgPath, frame);
+
+}
+
+void play::saveMosFrmToClst(int clst)
+{
+	ostringstream convertClstIdx;
+	convertClstIdx << clst;
+	string clstIdxStr = convertClstIdx.str();
+//file:///scratch/workspace/picStrucWR/playsClusters/1
+	string clstPath = "playsClusters/" + clstIdxStr + "/" + vidIdxStr + ".jpg";
+	imwrite(clstPath, mosFrame);
+	string clstFgPath = "playsClusters/" + clstIdxStr + "/" + vidIdxStr + "Fg.jpg";
+	imwrite(clstFgPath, image);
 
 }
 
@@ -2319,7 +2336,7 @@ void play::extractOdGridsFeatRect(direction dir, vector<int> &featureVec)
 }
 
 void play::extractOdGridsFeatRect(direction dir, vector<int> &featureVec,
-		const vector<CvSize> &gridSizes, const vector<Point2i> gridsNum, int expMode)
+		const vector<CvSize> &gridSizes, const vector<Point2i> &gridsNum, int expMode)
 {
 
 	rectification();
@@ -2362,7 +2379,8 @@ void play::extractOdGridsFeatRect(direction dir, vector<int> &featureVec,
 				minYardLnXCoord = rectScrimCnt.x + d * (i + 1) * gridSizes[k].width;
 			}
 
-			for(int j = -0.5 * gridsNum[k].y; j < gridsNum[k].y * 0.5; ++j)
+//			for(int j = -0.5 * gridsNum[k].y; j < gridsNum[k].y * 0.5; ++j)
+			for(double j = -0.5 * gridsNum[k].y; j < gridsNum[k].y * 0.5; ++j)
 			{
 				int fgPixelsNum = 0;
 				struct rect scanR;
@@ -2378,6 +2396,7 @@ void play::extractOdGridsFeatRect(direction dir, vector<int> &featureVec,
 				scanR.c = Point2d(maxYardLnXCoord, upY);
 				scanR.d = Point2d(maxYardLnXCoord, lowY);
 
+	//			expMode = 1;
 				if(expMode)
 				{
 	//				Point2d scanRCnt = 0.25 * (scanR.a + scanR.b + scanR.c + scanR.d);
@@ -2405,7 +2424,8 @@ void play::extractOdGridsFeatRect(direction dir, vector<int> &featureVec,
 						visible = true;
 
 					if(!insideFld)
-						fgPixelsNum = -2;
+//						fgPixelsNum = -2;
+						fgPixelsNum = 0;
 					else if(!visible)
 						fgPixelsNum = -1;
 					else
@@ -2499,7 +2519,131 @@ void play::extractOdGridsFeatRect(direction dir, vector<int> &featureVec,
 	imwrite(mosPlotPath, rectMosFrame);
 }
 
-void play::extractOdStripsFeatFldCrd(direction dir, vector<int> &featureVec)
+
+
+void play::extractOdGridsFeatRectIndRsp(direction dir, vector<int> &featureVec,
+		const vector<CvSize> &gridSizes, const vector<Point2i> &gridsNum)
+{
+
+	rectification();
+
+	int d = 0;
+	string dirStr;
+	if(dir == leftDir)
+	{
+		d = -1;
+		dirStr = "Left";
+	}
+	else if (dir == rightDir)
+	{
+		d = 1;
+		dirStr = "Right";
+	}
+	else
+		return;
+
+	vector<rect> scanRects;
+
+	for(unsigned int k = 0; k < gridSizes.size(); ++k)
+	{
+
+		vector<rect> scanRectsOneLevel;
+		vector<int> featureVecLevel;
+
+		for(int i = 0; i < gridsNum[k].x; ++i)
+		{
+			double maxYardLnXCoord, minYardLnXCoord;
+
+			if(dir == rightDir)
+			{
+				maxYardLnXCoord = rectScrimCnt.x + d * (i + 1) * gridSizes[k].width;
+				minYardLnXCoord = rectScrimCnt.x + d * i * gridSizes[k].width;
+			}
+			else
+			{
+				maxYardLnXCoord = rectScrimCnt.x + d * i * gridSizes[k].width;
+				minYardLnXCoord = rectScrimCnt.x + d * (i + 1) * gridSizes[k].width;
+			}
+
+//			for(int j = -0.5 * gridsNum[k].y; j < gridsNum[k].y * 0.5; ++j)
+			for(double j = -0.5 * gridsNum[k].y; j < gridsNum[k].y * 0.5; ++j)
+			{
+				int fgPixelsNum = 0;
+				struct rect scanR;
+
+	//			double lowY = rectScrimCnt.y + j * (FieldLength / 10.0);
+	//			double upY = rectScrimCnt.y + (j + 1) * (FieldLength / 10.0);
+				double lowY = rectScrimCnt.y + j * gridSizes[k].height;
+				double upY = rectScrimCnt.y + (j + 1) * gridSizes[k].height;
+	//			cout << "lowY: " << lowY << endl;
+	//			cout << "upY: " << upY << endl;
+				scanR.a = Point2d(minYardLnXCoord, lowY);
+				scanR.b = Point2d(minYardLnXCoord, upY);
+				scanR.c = Point2d(maxYardLnXCoord, upY);
+				scanR.d = Point2d(maxYardLnXCoord, lowY);
+
+				for(int y = lowY; y < upY; ++y)
+					for(int x = minYardLnXCoord; x < maxYardLnXCoord; ++x)
+					{
+						if( y < 0 || y >= FieldLength)
+							continue;
+						if( x < 0 || x >= FieldWidth)
+							continue;
+						const Point3_<uchar>* p = rectImage.ptr<Point3_<uchar> >(y, x);
+						if(int(p->z) == 255)
+								++fgPixelsNum;
+					}
+
+				bool insideFld = false, visible = false;
+				int indicator = 0;
+
+				if(scanR.a.x >= 0 && scanR.a.x < FieldWidth &&
+						scanR.a.y >= 0 && scanR.a.y < FieldLength)
+					insideFld = true;
+				if(scanR.b.x >= 0 && scanR.b.x < FieldWidth &&
+						scanR.b.y >= 0 && scanR.b.y < FieldLength)
+					insideFld = true;
+				if(scanR.c.x >= 0 && scanR.c.x < FieldWidth &&
+						scanR.c.y >= 0 && scanR.c.y < FieldLength)
+					insideFld = true;
+				if(scanR.d.x >= 0 && scanR.d.x < FieldWidth &&
+						scanR.d.y >= 0 && scanR.d.y < FieldLength)
+					insideFld = true;
+
+				if(isPntInsideRect(scanR.a, imgBndRect) || isPntInsideRect(scanR.b, imgBndRect)
+						|| isPntInsideRect(scanR.c, imgBndRect) || isPntInsideRect(scanR.d, imgBndRect))
+//				if(isPntInsideRect(scanRCnt, imgBndRect))
+					visible = true;
+
+				if(!insideFld)
+					indicator = 0;
+				else if(!visible)
+					indicator = 0;
+				else
+				{
+					indicator = 1;
+				}
+
+				scanRects.push_back(scanR);
+				featureVec.push_back(fgPixelsNum);
+
+				scanRectsOneLevel.push_back(scanR);
+				featureVecLevel.push_back(fgPixelsNum);
+
+				featureVec.push_back(indicator);
+
+//				scanRects.push_back(scanR);
+//				featureVec.push_back(fgPixelsNum);
+//
+//				scanRectsOneLevel.push_back(scanR);
+//				featureVecLevel.push_back(fgPixelsNum);
+
+			}
+		}
+	}
+}
+
+void play::extOdStripsFeatFldCrdOrigImg(direction dir, vector<int> &featureVec)
 {
 	rectification();
 	Mat homoMat;
@@ -2605,7 +2749,7 @@ void play::extractOdStripsFeatFldCrd(direction dir, vector<int> &featureVec)
 
 }
 
-void play::extractOdGridsFeatFldCrd(direction dir, vector<int> &featureVec)
+void play::extOdGridsFeatFldCrdOrigImg(direction dir, vector<int> &featureVec)
 {
 	rectification();
 	Mat homoMat;
@@ -2671,12 +2815,6 @@ void play::extractOdGridsFeatFldCrd(direction dir, vector<int> &featureVec)
 			scanR.b = Point2d(minYardLnXCoord, upY);
 			scanR.c = Point2d(maxYardLnXCoord, upY);
 			scanR.d = Point2d(maxYardLnXCoord, lowY);
-
-//			bool outsideField = false;
-//			if( upY < 0 || lowY > FieldLength)
-//				outsideField = true;
-//			if( maxYardLnXCoord < 0 || minYardLnXCoord > FieldWidth)
-//				outsideField = true;
 
 			vector<Point2d> srcLosVec, dstLosVec;
 			srcLosVec.push_back(scanR.a);
@@ -2745,6 +2883,233 @@ void play::extractOdGridsFeatFldCrd(direction dir, vector<int> &featureVec)
 	imwrite(plotPath, image);
 	imwrite(mosPlotPath, mosFrame);
 }
+
+
+void play::extOdGridsFeatFldCrdOrigImg(direction dir, vector<int> &featureVec,
+		const vector<CvSize> &gridSizes, const vector<Point2i> &gridsNum, int expMode)
+{
+
+	rectification();
+	Mat homoMat;
+	getOverheadFieldHomo(homoMat);
+
+	int d = 0;
+	string dirStr;
+	if(dir == leftDir)
+	{
+		d = -1;
+		dirStr = "Left";
+	}
+	else if (dir == rightDir)
+	{
+		d = 1;
+		dirStr = "Right";
+	}
+	else
+		return;
+
+	struct rect fieldRange;
+	fieldRange.a = Point2d(EndZoneWidth, .0);
+	fieldRange.b = Point2d(EndZoneWidth, FieldLength);
+	fieldRange.c = Point2d(FieldWidth - EndZoneWidth, FieldLength);
+	fieldRange.d = Point2d(FieldWidth - EndZoneWidth, .0);
+
+	vector<Point2d> srcFRPnts, dstFRPnts;
+	srcFRPnts.push_back(fieldRange.a);
+	srcFRPnts.push_back(fieldRange.b);
+	srcFRPnts.push_back(fieldRange.c);
+	srcFRPnts.push_back(fieldRange.d);
+	perspectiveTransform(srcFRPnts, dstFRPnts, homoMat);
+	fieldRange.a = dstFRPnts[0];
+	fieldRange.b = dstFRPnts[1];
+	fieldRange.c = dstFRPnts[2];
+	fieldRange.d = dstFRPnts[3];
+
+	vector<Point2d> srcLosVec, dstLosVec;
+	srcLosVec.push_back(rectScrimLn.a);
+	srcLosVec.push_back(rectScrimLn.b);
+	srcLosVec.push_back(rectScrimLn.c);
+	srcLosVec.push_back(rectScrimLn.d);
+	perspectiveTransform(srcLosVec, dstLosVec, homoMat);
+	scrimLn.a = dstLosVec[0];
+	scrimLn.b = dstLosVec[1];
+	scrimLn.c = dstLosVec[2];
+	scrimLn.d = dstLosVec[3];
+	scrimCnt = 0.25 * (scrimLn.a + scrimLn.b + scrimLn.c + scrimLn.d);
+
+	getFieldYardLines(yardLnsFldModel);
+	for(unsigned int ln = 0; ln < yardLnsFldModel.size(); ++ln)
+	{
+		vector<Point2d> yardLnFld;
+		perspectiveTransform(yardLnsFldModel[ln], yardLnFld, homoMat);
+		yardLnsFldModel[ln] = yardLnFld;
+	}
+
+
+	vector<rect> scanRects;
+
+	for(unsigned int k = 0; k < gridSizes.size(); ++k)
+	{
+
+		vector<rect> scanRectsOneLevel;
+		vector<int> featureVecLevel;
+
+		for(int i = 0; i < gridsNum[k].x; ++i)
+		{
+			double maxYardLnXCoord, minYardLnXCoord;
+
+			if(dir == rightDir)
+			{
+				maxYardLnXCoord = rectScrimCnt.x + d * (i + 1) * gridSizes[k].width;
+				minYardLnXCoord = rectScrimCnt.x + d * i * gridSizes[k].width;
+			}
+			else
+			{
+				maxYardLnXCoord = rectScrimCnt.x + d * i * gridSizes[k].width;
+				minYardLnXCoord = rectScrimCnt.x + d * (i + 1) * gridSizes[k].width;
+			}
+			for(double j = -0.5 * gridsNum[k].y; j < gridsNum[k].y * 0.5; ++j)
+			{
+				int fgPixelsNum = 0;
+				struct rect scanR, scanRField;
+				double lowY = rectScrimCnt.y + j * gridSizes[k].height;
+				double upY = rectScrimCnt.y + (j + 1) * gridSizes[k].height;
+				scanRField.a = Point2d(minYardLnXCoord, lowY);
+				scanRField.b = Point2d(minYardLnXCoord, upY);
+				scanRField.c = Point2d(maxYardLnXCoord, upY);
+				scanRField.d = Point2d(maxYardLnXCoord, lowY);
+
+				vector<Point2d> srcScanRVec, dstScanRVec;
+				srcScanRVec.push_back(scanRField.a);
+				srcScanRVec.push_back(scanRField.b);
+				srcScanRVec.push_back(scanRField.c);
+				srcScanRVec.push_back(scanRField.d);
+				perspectiveTransform(srcScanRVec, dstScanRVec, homoMat);
+				scanR.a = dstScanRVec[0];
+				scanR.b = dstScanRVec[1];
+				scanR.c = dstScanRVec[2];
+				scanR.d = dstScanRVec[3];
+
+	//			expMode = 1;
+				if(expMode)
+				{
+					bool insideFld = false, visible = false;
+
+					if(scanRField.a.x >= 0 && scanRField.a.x < FieldWidth &&
+							scanRField.a.y >= 0 && scanRField.a.y < FieldLength)
+						insideFld = true;
+					if(scanRField.b.x >= 0 && scanRField.b.x < FieldWidth &&
+							scanRField.b.y >= 0 && scanRField.b.y < FieldLength)
+						insideFld = true;
+					if(scanRField.c.x >= 0 && scanRField.c.x < FieldWidth &&
+							scanRField.c.y >= 0 && scanRField.c.y < FieldLength)
+						insideFld = true;
+					if(scanRField.d.x >= 0 && scanRField.d.x < FieldWidth &&
+							scanRField.d.y >= 0 && scanRField.d.y < FieldLength)
+						insideFld = true;
+
+					if(isPntInsideRect(scanRField.a, imgBndRect) || isPntInsideRect(scanRField.b, imgBndRect)
+							|| isPntInsideRect(scanRField.c, imgBndRect) || isPntInsideRect(scanRField.d, imgBndRect))
+						visible = true;
+
+					if(!insideFld)
+						fgPixelsNum = 0;
+					else if(!visible)
+						fgPixelsNum = -1;
+					else
+					{
+						for(int y = 0; y < imgYLen; ++y)
+							for(int x = 0; x < imgXLen; ++x)
+							{
+								const Point3_<uchar>* p = image.ptr<Point3_<uchar> >(y, x);
+								if(int(p->z) == 255)
+								{
+									Point2d pnt = Point2d(x + 1, y + 1);
+									if(isPntInsideRect(pnt, scanR) && isPntInsideRect(pnt, fieldRange))
+										++fgPixelsNum;
+								}
+							}
+					}
+				}
+				else
+				{
+					for(int y = 0; y < imgYLen; ++y)
+						for(int x = 0; x < imgXLen; ++x)
+						{
+							const Point3_<uchar>* p = image.ptr<Point3_<uchar> >(y, x);
+							if(int(p->z) == 255)
+							{
+								Point2d pnt = Point2d(x + 1, y + 1);
+								if(isPntInsideRect(pnt, scanR) && isPntInsideRect(pnt, fieldRange))
+									++fgPixelsNum;
+							}
+						}
+
+				}
+
+
+				scanRects.push_back(scanR);
+				featureVec.push_back(fgPixelsNum);
+
+				scanRectsOneLevel.push_back(scanR);
+				featureVecLevel.push_back(fgPixelsNum);
+
+			}
+		}
+
+	Mat fgImageLevel, mosImageLevel;
+	image.copyTo(fgImageLevel);
+	mosFrame.copyTo(mosImageLevel);
+
+#if losMethod == 1
+	plotYardLnsAndLos(fgImageLevel, scrimLn, yardLnsFldModel);
+	plotYardLnsAndLos(mosImageLevel, scrimLn, yardLnsFldModel);
+	//plotLos(image, scrimLn);
+#elif losMethod == 2
+	plotYardLnsAndLos(image, scrimLn, yardLnsFldModel, los);
+	//plotLos(image, scrimLn, los);
+#endif
+
+	circle(fgImageLevel, scrimCnt, 3, CV_RGB(0, 0, 250), 3);
+	circle(mosImageLevel, scrimCnt, 3, CV_RGB(0, 0, 250), 3);
+
+	plotScanLines(fgImageLevel, scanRectsOneLevel, featureVecLevel);
+	plotScanLines(mosImageLevel, scanRectsOneLevel, featureVecLevel);
+
+	ostringstream convertLevel;
+	convertLevel << k;
+	string levelStr = convertLevel.str();
+
+	string fgPlotPath = "Results/Game" + gameIdStr + "/plots/vid" + vidIdxStr + dirStr + levelStr + ".jpg";
+	string mosPlotPath = "Results/Game" + gameIdStr + "/plots/vidMos" + vidIdxStr + dirStr + levelStr +".jpg";
+
+	imwrite(fgPlotPath, fgImageLevel);
+	imwrite(mosPlotPath, mosImageLevel);
+	}
+
+#if losMethod == 1
+	plotYardLnsAndLos(image, scrimLn, yardLnsFldModel);
+	plotYardLnsAndLos(mosFrame, scrimLn, yardLnsFldModel);
+	//plotLos(image, scrimLn);
+#elif losMethod == 2
+	plotYardLnsAndLos(image, scrimLn, yardLnsFldModel, los);
+	//plotLos(image, scrimLn, los);
+#endif
+
+	circle(image, scrimCnt, 3, CV_RGB(0, 0, 250), 3);
+	circle(mosFrame, scrimCnt, 3, CV_RGB(0, 0, 250), 3);
+
+	plotScanLines(image, scanRects, featureVec);
+	plotScanLines(mosFrame, scanRects, featureVec);
+
+	plotPath = "Results/Game" + gameIdStr + "/plots/vid" + vidIdxStr + dirStr + ".jpg";
+	string mosPlotPath = "Results/Game" + gameIdStr + "/plots/vidMos" + vidIdxStr + dirStr + ".jpg";
+
+	imwrite(plotPath, image);
+	imwrite(mosPlotPath, mosFrame);
+}
+
+
 int fgPixelsInsideBoxXY(const play *pl, const struct rect &box)
 {
 	int fgPixelsNum = 0;
@@ -2846,7 +3211,7 @@ void plotYardLnsAndLos(Mat& img, struct rect& scrimLnRect, vector<yardLine> yard
 void plotYardLnsAndLos(Mat& img, struct rect& scrimLnRect, vector<vector<Point2d> > yardLns)
 {
 	for(unsigned int i = 0; i < yardLns.size(); ++i)
-		line(img, yardLns[i][0], yardLns[i][1], CV_RGB(250, 250, 250),2,8,0);
+		line(img, yardLns[i][0], yardLns[i][1], CV_RGB(0, 250, 0),2,8,0);
 
 	line(img, scrimLnRect.a, scrimLnRect.b, CV_RGB(0, 0, 250),2,8,0);
 	line(img, scrimLnRect.b, scrimLnRect.c, CV_RGB(0, 0, 250),2,8,0);
@@ -3063,7 +3428,8 @@ void play::ellipseWrClassifier()
 
 void play::rectification()
 {
-	string matchesFile = "imgRectMatches/Game" + gameIdStr + "/vid" + vidIdxStr + "RectMatches";
+//	string matchesFile = "imgRectMatches/Game" + gameIdStr + "/vid" + vidIdxStr + "RectMatches";
+	string matchesFile = "imgRectMatches/Game" + gameIdStr + "/vid" + vidIdxStr + "RectMatchesNew";
 	Mat dstImg, homoMat;
 	//rectify mos frame
 	rectifyImageToField(matchesFile, mosFrame, dstImg, homoMat);
@@ -3073,8 +3439,6 @@ void play::rectification()
 
 	//rectfy foreground image
 	rectifyImageToField(matchesFile, image, rectImage, homoMat);
-
-	string dstImgPath = "rectImages/Game" + gameIdStr + "/vid" + vidIdxStr + "Rect.jpg";
 
 //	struct rect rectScrimLn;
 //	Point2d dstscrimCnt;
@@ -3114,13 +3478,42 @@ void play::rectification()
 	rectLos[0] = dstRectLosVec[0];
 	rectLos[1] = dstRectLosVec[1];
 #endif
+	Mat rectFgImgTmp;
+	rectImage.copyTo(rectFgImgTmp);
 
+#if losMethod == 1
+	plotLos(dstImg, rectScrimLn);
+	plotLos(rectFgImgTmp, rectScrimLn);
+#elif losMethod == 2
+	plotLos(dstImg, rectScrimLn, rectLos);
+#endif
+
+	circle(dstImg, rectScrimCnt, 3, CV_RGB(0, 0, 250), 3);
+	circle(rectFgImgTmp, rectScrimCnt, 3, CV_RGB(0, 0, 250), 3);
+
+	string dstImgPath = "rectImages/Game" + gameIdStr + "/vid" + vidIdxStr + "Rect.jpg";
 	imwrite(dstImgPath, dstImg);
+	string fgImgPath = "rectImages/Game" + gameIdStr + "/vid" + vidIdxStr + "RectFg.jpg";
+	imwrite(fgImgPath, rectFgImgTmp);
+}
+
+void play::writeMatchPnts()
+{
+	string matchesFile = "imgRectMatches/Game" + gameIdStr + "/vid" + vidIdxStr + "RectMatches";
+	vector<Point2f> srcPoints, dstPoints;
+	readMatches(matchesFile, srcPoints, dstPoints);
+	string matchePntsPath = "imgRectMatches/Game" + gameIdStr + "/vid" + vidIdxStr + "RectMatchesNew";
+	ofstream fout(matchePntsPath.c_str());
+	for(unsigned int i = 0; i < srcPoints.size(); ++i)
+		fout << dstPoints[i].x << " " << dstPoints[i].y
+		<< " "<< srcPoints[i].x << " " << srcPoints[i].y << endl;
+	fout.close();
 }
 
 void play::getOverheadFieldHomo(Mat &homoMat)
 {
-	string matchesFile = "imgRectMatches/Game" + gameIdStr + "/vid" + vidIdxStr + "RectMatches";
+//	string matchesFile = "imgRectMatches/Game" + gameIdStr + "/vid" + vidIdxStr + "RectMatches";
+	string matchesFile = "imgRectMatches/Game" + gameIdStr + "/vid" + vidIdxStr + "RectMatchesNew";
 	Mat dstImg;
 	transFieldToImage(matchesFile, dstImg, homoMat);
 

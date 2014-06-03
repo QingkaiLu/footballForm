@@ -351,23 +351,28 @@ void randTreeLeavePlayOut(const vector<int> &trainTestGames, const vector<vector
 	}
 
 
-	vector<string> trainTestGamePaths;
+	vector<string> trainTestGamePaths, losCntFileNames;
 	for(unsigned int i = 0; i < trainTestGames.size(); ++i)
 	{
 		ostringstream convertGameId;
-		convertGameId << trainTestGames[i] ;
+		convertGameId << trainTestGames[i];
 		string gameIdStr = convertGameId.str();
 
 		if(trainTestGames[i] < 10)
 			gameIdStr = "0" + gameIdStr;
 //		string path = "randTreesTrainData/featureVecsGame" + gameIdStr;
 		string path = "randTreesTrainData/features/featuresGame" + gameIdStr + "Rect";
+//		string path = "randTreesTrainData/features/featsGame" + gameIdStr + "RectOverallExp";
+//		string path = "randTreesTrainData/features/featuresGame" + gameIdStr + "RectIndRsp";
 		trainTestGamePaths.push_back(path);
+//		string losCntIdsFile = "randTreesTrainData/losCnt/losCntIdsGame" + gameIdStr;
+//		losCntFileNames.push_back(losCntIdsFile);
 	}
 
 	vector<vector<double> > trainTestFeats;
 	vector<double> trainTestLabs;
 	readOdFeatData(trainTestGamePaths, trainTestFeats, trainTestLabs, featNumPerPlay);
+//	readOdFeatData(trainTestGamePaths, trainTestFeats, trainTestLabs, featNumPerPlay, losCntFileNames, 1);
 
 
 	int errPlays = 0;
@@ -406,11 +411,11 @@ void randTreeLeavePlayOut(const vector<int> &trainTestGames, const vector<vector
 			}
 		}
 
-		Mat varType = Mat(featNumPerPlay + 1, 1, CV_8U );
+		Mat varType = Mat(featNumPerPlay + 1, 1, CV_8U);
 		varType.setTo(Scalar(CV_VAR_NUMERICAL) );
 		varType.at<uchar>(featNumPerPlay, 0) = CV_VAR_CATEGORICAL;
 
-		CvRTParams params = CvRTParams(10,10,0,false,15,0,true,4,100,0.01f,CV_TERMCRIT_ITER);
+		CvRTParams params = CvRTParams(10,10,0,false,15,0,true,4,1000,0.01f,CV_TERMCRIT_ITER);
 
 		CvRTrees* rtree = new CvRTrees;
 		rtree->train(trainFeaturesMat, CV_ROW_SAMPLE, trainLabelsMat,
@@ -440,7 +445,7 @@ void randTreeLeavePlayOut(const vector<int> &trainTestGames, const vector<vector
 		if (fabs(result - testLabelsMat.at<float>(0, 0))>= FLT_EPSILON)
 		{
 			++errPlays;
-			cout << "Game " << pId.gameId << ", play " << pId.vidId << " is wrong. " << endl;
+			cout << "Game " << pId.gameId << ", play " << pId.vidId << " is wrong." << endl;
 			cout << "Detected as: " << (char)result << endl;
 			cout << "True label: " << (char)testLabelsMat.at<float>(0, 0) << endl;
 		}
@@ -451,7 +456,10 @@ void randTreeLeavePlayOut(const vector<int> &trainTestGames, const vector<vector
 
 	}
 
+//	cout << errPlays << endl;
 	cout << "Leave out plays overall accuracy: " << (1.0 - errPlays / (double)trainTestLabs.size() ) << endl;
+	cout << "samples number: " << trainTestLabs.size() << endl;
+	cout << "errors number: " << errPlays << endl;
 
 }
 
@@ -470,7 +478,7 @@ void randTreeLeavePlayOutExp(const vector<int> &trainTestGames, const vector<vec
 	for(unsigned int i = 0; i < trainTestGames.size(); ++i)
 	{
 		ostringstream convertGameId;
-		convertGameId << trainTestGames[i] ;
+		convertGameId << trainTestGames[i];
 		string gameIdStr = convertGameId.str();
 
 		if(trainTestGames[i] < 10)
@@ -614,8 +622,8 @@ void randTreeLeavePlayOutExp(const vector<int> &trainTestGames, const vector<vec
 			}
 
 //			cout << "leftOErr: " << leftOErr << endl;
-//			cout << "leftOProb: " << leftOProb << endl;
-//			cout << "leftDProb: " << leftDProb << endl;
+			cout << "leftOProb: " << leftOProb << endl;
+			cout << "leftDProb: " << leftDProb << endl;
 //			if(leftOErr)
 //				cout << "**********" << endl;
 //			result = testLabelsMatLeftO.at<float>(0, 0);
@@ -733,22 +741,24 @@ void leavePlayOutTest(const vector<int> &games, int expMode, int odExpMode)
 
 }
 
-int main()
-//int randTrewes()
+//int main()
+int randTrees()
 {
 	vector<int> games;
 	games.push_back(2);
 	games.push_back(8);
 	games.push_back(9);
 	games.push_back(10);
+//	games.push_back(9);
 
-	int expMode = 1;
+	int expMode = 0;
 	int odExpMode = 2;
-	int fMode = 2;
+	int featureMode = 2;
 
-	extractFeatures(games, expMode, fMode);
+//	extractFeatures(games, expMode, featureMode);
 
 //	leaveGamesOutTest(games);
+//	expMode = 0;
 	leavePlayOutTest(games, expMode, odExpMode);
 
 	return 1;

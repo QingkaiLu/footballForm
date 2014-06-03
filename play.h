@@ -92,6 +92,7 @@ public:
 	void setUp();
 
 	void saveMosFrm();
+	void saveMosFrmToClst(int clst);
 
 	void cvtFgImgFrmBmpToJpg();
 
@@ -102,17 +103,24 @@ public:
 	void ellipseWrClassifier();
 
 	void rectification();
+	void writeMatchPnts();
 	void extractOdStripsFeatRect(direction dir, vector<int> &featureVec);
 	void extractOdGridsFeatRect(direction dir, vector<int> &featureVec);
 	//expMode == 0: no expectation
 	//expMode == 1: with expectation
 	void extractOdGridsFeatRect(direction dir, vector<int> &featureVec,
-			const vector<CvSize> &gridSizes, const vector<Point2i> gridsNum, int expMode);
+			const vector<CvSize> &gridSizes, const vector<Point2i> &gridsNum, int expMode);
+	//extract features with indicator response for missing features.
+	void extractOdGridsFeatRectIndRsp(direction dir, vector<int> &featureVec,
+			const vector<CvSize> &gridSizes, const vector<Point2i> &gridsNum);
 
 	//get the coordinate from the overhead field model
 	void getOverheadFieldHomo(Mat &homoMat);
-	void extractOdStripsFeatFldCrd(direction dir, vector<int> &featureVec);
-	void extractOdGridsFeatFldCrd(direction dir, vector<int> &featureVec);
+	//
+	void extOdStripsFeatFldCrdOrigImg(direction dir, vector<int> &featureVec);
+	void extOdGridsFeatFldCrdOrigImg(direction dir, vector<int> &featureVec);
+	void extOdGridsFeatFldCrdOrigImg(direction dir, vector<int> &featureVec,
+			const vector<CvSize> &gridSizes, const vector<Point2i> &gridsNum, int expMode);
 
 public:
 	struct playId pId;

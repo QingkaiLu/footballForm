@@ -10,7 +10,10 @@ void readOdLabels(std::string odLabelFilePath, std::vector<playId> &pIds, std::v
 
 bool readOdFeatData(const std::vector<std::string> &fileNames, std::vector<std::vector<double> > &features,
 		std::vector<double> &labels, int featureNum);
-
+bool readOdFeatData(const std::vector<std::string> &fileNames, std::vector<std::vector<double> > &features,
+		std::vector<double> &labels, int featureNum, const std::vector<std::string> &losCntFileNames, int losCntIdx);
+//The order of levels matters for spatial pyramid, otherwise need to resort.
+//The order should be from levels of bigger grids to smaller grids.
 void setUpGrids(std::vector<CvSize> &gridSizes, std::vector<cv::Point2i> &gridsNum);
 
 bool readLosCntIds(const std::vector<std::string> &fileNames, std::vector<int> &losCntIds);
@@ -35,8 +38,12 @@ void getPlayIds(int gameId, std::vector<playId> &pIds);
 //compute the expectation of o and d features
 void computeOdExpFeats(const std::vector<int> &games);
 
+//compute the overall expectation of features
+void computeOverallExpFeats(const std::vector<int> &games);
+
 void readOdExpFeats(std::vector<std::vector<int> > &fVecOPlaysExp,
-		std::vector<std::vector<int> > &fVecDPlaysExp);
+		std::vector<std::vector<int> > &fVecDPlaysExp,
+		std::string oExpFile, std::string dExpFile);
 
 //compute od features of plays replacing the
 //missing features with expected features
@@ -46,15 +53,21 @@ void readOdExpFeats(std::vector<std::vector<int> > &fVecOPlaysExp,
 //to replace missing features.
 //odMode == 3: Left d and right o on los sides
 //to replace missing features.
-void computeOdFeatsMissExp(const std::vector<int> &games, int odMode);
+void computeOdSubFeatsMissExp(const std::vector<int> &games, int odMode);
 
 //compute od features by concatenating left and right features
 //to avoid discarding features when subtracting features.
 void computeOdConcaFMissExp(const std::vector<int> &games, int odMode);
 
+//compute od features by concatenating left and right features with overall expectation
+void computeOdConcaFOverallExp(const std::vector<int> &games);
+
 // if fMode is 1, subtract left side features with right features
 // if fMode is 2, concatenate left and right side features
 void computeOdFeatsNoExp(const std::vector<int> &games, int fMode);
+
+//with response indicator
+void computeOdFeatsIndRspNoExp(const std::vector<int> &games, int fMode);
 
 //void computeOdConcaFeats(const std::vector<int> &games);
 

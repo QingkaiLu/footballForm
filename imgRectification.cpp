@@ -106,6 +106,44 @@ bool readMatches(string matchesFile, vector<Point2f> &srcPoints, vector<Point2f>
 	return true;
 }
 
+bool readMatchesNew(string matchesFile, vector<Point2f> &srcPoints, vector<Point2f> &dstPoints)
+{
+	ifstream fin(matchesFile.c_str());
+	//x: 250 y: 82 Yard: r 40 Hash: 0
+
+	if(!fin.is_open())
+	{
+		cout << "Can't open file " << matchesFile << endl;
+		return false;
+	}
+
+	fin.seekg(0, ios::end);
+	if (fin.tellg() == 0) {
+		cout << "Empty file " << matchesFile << endl;
+		return false;
+	}
+	fin.seekg(0, ios::beg);
+	while(!fin.eof())
+	{
+		string tmpStr, yardLineSide;
+		Point2f srcPnt, dstPnt;
+		dstPnt.x = -1;
+		fin >> dstPnt.x >> dstPnt.y >> srcPnt.x >> srcPnt.y;
+		if(dstPnt.x == -1)
+			break;
+
+		srcPoints.push_back(srcPnt);
+		dstPoints.push_back(dstPnt);
+
+		//cout << srcPnt.x << " " << srcPnt.y << " " << dstPnt.x << " " << dstPnt.y << endl;
+
+	}
+
+	fin.close();
+
+	return true;
+}
+
 //void homoTransPoint(const Point2d &srcPnt, const Mat &homoMat, Point2d &dstPnt)
 //{
 //	Mat srcPntVec(3, 1, CV_64FC1), dstPntVec(3, 1, CV_32FC1);
@@ -123,7 +161,8 @@ bool readMatches(string matchesFile, vector<Point2f> &srcPoints, vector<Point2f>
 void rectifyImageToField(string matchesFile, const Mat &srcImg, Mat &dstImg, Mat &homoMat)
 {
 	vector<Point2f> srcPoints, dstPoints;
-	readMatches(matchesFile, srcPoints, dstPoints);
+//	readMatches(matchesFile, srcPoints, dstPoints);
+	readMatchesNew(matchesFile, srcPoints, dstPoints);
 	homoMat = findHomography(srcPoints, dstPoints);
 	Size distImgSize(FieldWidth, FieldLength);
 	dstImg.create(FieldLength, FieldWidth, CV_32FC3);
@@ -134,7 +173,8 @@ void rectifyImageToField(string matchesFile, const Mat &srcImg, Mat &dstImg, Mat
 void transFieldToImage(string matchesFile, Mat &dstImg, Mat &homoMat)
 {
 	vector<Point2f> srcPoints, dstPoints;
-	readMatches(matchesFile, dstPoints, srcPoints);
+//	readMatches(matchesFile, dstPoints, srcPoints);
+	readMatchesNew(matchesFile, dstPoints, srcPoints);
 	homoMat = findHomography(srcPoints, dstPoints);;
 	Mat srcImg;
 	srcImg.create(FieldLength, FieldWidth, CV_32FC3);

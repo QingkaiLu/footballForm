@@ -241,3 +241,51 @@ int picWr()
 ////	Mat homoMat;
 ////	p.getOverheadFieldHomo(homoMat);
 //}
+
+//int main()
+//{
+//	unsigned int gamesVidsNum[10] = {132, 141, 173, 149, 135, 156, 152, 159, 128, 146};
+//	for(unsigned int i = 8; i < 9; ++i)
+//	{
+//		ostringstream convertGameId;
+//		convertGameId << i ;
+//		string gameIdStr = convertGameId.str();
+//
+//		if(i < 10)
+//			gameIdStr = "0" + gameIdStr;
+//		string odPIdsPath = "odGame" + gameIdStr;
+////		ofstream foutOdPIds(odPIdsPath.c_str());
+////		for(unsigned int j = 1; j <= gamesVidsNum[i - 2]; ++j)
+//		for(unsigned int j = 83; j <= 83; ++j)
+//		{
+//			struct playId pId;
+//			pId.gameId = i;
+//			pId.vidId = j;
+//			cout << i << " " << j << endl;
+//
+//			play p(pId);
+//			p.setUp();
+////			p.mos = p.mos - 3;
+////			p.getMos();
+////			if(i == 28)
+////				p.mos = 1;
+//			p.saveMosFrm();
+//
+////			if(p.trueDir != nonDir)
+////			{
+////				string leftTeam;
+////				if(p.trueDir == leftDir)
+////					leftTeam = "d";
+////				else if(p.trueDir == rightDir)
+////					leftTeam = "o";
+////				foutOdPIds << p.pId.gameId << " " << p.pId.vidId << " l " << leftTeam << endl;
+////			}
+//
+//		}
+////		foutOdPIds.close();
+//	}
+//
+//
+//	return 0;
+//}
+
