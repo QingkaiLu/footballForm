@@ -43,10 +43,10 @@ enum direction{
 	nonDir
 };
 
-struct bndBox{
-	cv::Point2d leftUpVert;
-	double xLength, yLength;
-};
+//struct bndBox{
+//	cv::Point2d leftUpVert;
+//	double xLength, yLength;
+//};
 
 
 struct yardLine
@@ -55,14 +55,14 @@ struct yardLine
 	int index;
 };
 
-struct track{
-	int frameStart, frameEnd;
-	double dist, ydist;
-	CvPoint start, end;
-	//int col;				//Right = 1 , Left = 2;
-	bool lowRec, upRec;
-
-};
+//struct track{
+//	int frameStart, frameEnd;
+//	double dist, ydist;
+//	CvPoint start, end;
+//	//int col;				//Right = 1 , Left = 2;
+//	bool lowRec, upRec;
+//
+//};
 
 //struct track{
 //	//int trackId;
@@ -95,13 +95,13 @@ struct playId{
 
 //typedef std::vector<vector<pair<int,float> > > dijGraph;
 
-enum playerType{
-	nonPType,
-	lowWR,
-	lowCB,
-	upWR,
-	upCB
-};
+//enum playerType{
+//	nonPType,
+//	lowWR,
+//	lowCB,
+//	upWR,
+//	upCB
+//};
 
 //struct player{
 //	playerType pType;

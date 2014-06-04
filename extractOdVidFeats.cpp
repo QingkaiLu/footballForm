@@ -6,6 +6,7 @@
 #include "extractOdVidFeats.h"
 #include "play.h"
 #include "imgRectification.h"
+#include "playAuxFunc.h"
 
 using namespace std;
 using namespace cv;

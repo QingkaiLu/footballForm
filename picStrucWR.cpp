@@ -8,7 +8,6 @@
 
 #include "play.h"
 //#include "wrPicStrModel.h"
-#include "perceptron.h"
 
 using namespace std;
 
@@ -103,7 +102,6 @@ int picWr()
 			//p.computeAllTracksDir();
 			//vector<double> f(12, 0.0);
 			p.setUp();
-			p.computeDirLosArea();
 //			p.ellipseWrClassifier();
 //			p.computeFormDir(pTypes, percep.wAvg, percep.featureNum);
 			//p.saveMosFrm();

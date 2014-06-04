@@ -137,8 +137,8 @@ void leavePlayOutTestKnn(const vector<int> &games)
 
 }
 
-int main()
-//int knn()
+//int main()
+int knn()
 {
 	vector<int> games;
 	games.push_back(2);

@@ -741,8 +741,8 @@ void leavePlayOutTest(const vector<int> &games, int expMode, int odExpMode)
 
 }
 
-//int main()
-int randTrees()
+int main()
+//int randTrees()
 {
 	vector<int> games;
 	games.push_back(2);
@@ -755,7 +755,7 @@ int randTrees()
 	int odExpMode = 2;
 	int featureMode = 2;
 
-//	extractFeatures(games, expMode, featureMode);
+	extractFeatures(games, expMode, featureMode);
 
 //	leaveGamesOutTest(games);
 //	expMode = 0;
