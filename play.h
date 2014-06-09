@@ -13,7 +13,7 @@ using namespace cv;
 
 
 // predMos: 0 -> true MOS; 1 -> predicated MOS
-#define predMos 0
+#define predMos 1
 
 //losMethod == 2 => new los based on sheng's gradient los;
 //losMethod == 1 => old los based on klt or new los based on the

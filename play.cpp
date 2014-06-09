@@ -10,6 +10,7 @@
 #include "ellipse.h"
 #include "imgRectification.h"
 #include "playAuxFunc.h"
+#include "matchImgs.h"
 
 
 play::play(struct playId p)
@@ -41,10 +42,12 @@ play::play(struct playId p)
 	mosFilePath = "Mos/Game" + gameIdStr  + "/annotation.pred";
 	scrimLnsGradFilePath = "scrimLine/Game" + gameIdStr + "/losPredMos/video0" + vidIdxStr + ".glos4";
 	mosImgPath = "predMosImages/Game" + gameIdStr + "/vid" + vidIdxStr + ".jpg";
+	fgImgPath = "predFgMosImages/Game" + gameIdStr + "/video0" + vidIdxStr +".bmp";
 #elif predMos == 0
 	mosFilePath = "Mos/Game" + gameIdStr  + "/mos_id_new.txt";
 	scrimLnsGradFilePath = "scrimLine/Game" + gameIdStr + "/losTrueMos/video0" + vidIdxStr + ".glos4";
 	mosImgPath = "mosImages/Game" + gameIdStr + "/vid" + vidIdxStr + ".jpg";
+	fgImgPath = "fgMosImages/Game" + gameIdStr + "/video0" + vidIdxStr +".bmp";
 #endif
 
 
@@ -55,7 +58,7 @@ play::play(struct playId p)
 #endif
 	trueDirFilePath = "ODKGt/Game" + gameIdStr + "/game" + gameIdStr + "_wr_new";
 
-	fgImgPath = "fgMosImages/Game" + gameIdStr + "/video0" + vidIdxStr +".bmp";
+//	fgImgPath = "fgMosImages/Game" + gameIdStr + "/video0" + vidIdxStr +".bmp";
 	videoPath = "../videos/Game" + gameIdStr + "/Game" + gameIdStr + "_video0" + vidIdxStr +".avi";
 //	mosImgPath = "mosImages/Game" + gameIdStr + "/vid" + vidIdxStr + ".jpg";
 	fgImage = imread(fgImgPath.c_str(), CV_LOAD_IMAGE_COLOR);
@@ -1411,13 +1414,27 @@ void play::rectification()
 	string matchesFile = "imgRectMatches/Game" + gameIdStr + "/vid" + vidIdxStr + "RectMatchesNew";
 	Mat dstImg, homoMat;
 	//rectify mos frame
-	rectifyImageToField(matchesFile, mosFrame, dstImg, homoMat);
-	//rectMosFrame = dstImg.clone();
-	rectMosFrame.create(FieldLength, FieldWidth, CV_32FC3);
-	dstImg.copyTo(rectMosFrame);
+#if predMos == 1
+//	Mat tMosFrmToPMosFrmHomo;
+//	string trueMosImgPath = "mosImages/Game" + gameIdStr + "/vid" + vidIdxStr + ".jpg";
+//	Mat trueMosImg = imread(trueMosImgPath.c_str(), CV_LOAD_IMAGE_COLOR);
+//	getSIFTHomoMat(mosFrame, trueMosImg, tMosFrmToPMosFrmHomo, false, 1.0);
+//	rectifyImageToField(matchesFile, mosFrame, dstImg, homoMat, tMosFrmToPMosFrmHomo);
+//	//rectfy foreground fgImage
+//	rectifyImageToField(matchesFile, fgImage, rectImage, homoMat, tMosFrmToPMosFrmHomo);
 
+	rectifyImageToField(matchesFile, mosFrame, dstImg, homoMat);
 	//rectfy foreground fgImage
 	rectifyImageToField(matchesFile, fgImage, rectImage, homoMat);
+
+#elif predMos == 0
+	rectifyImageToField(matchesFile, mosFrame, dstImg, homoMat);
+	//rectfy foreground fgImage
+	rectifyImageToField(matchesFile, fgImage, rectImage, homoMat);
+#endif
+
+	rectMosFrame.create(FieldLength, FieldWidth, CV_32FC3);
+	dstImg.copyTo(rectMosFrame);
 
 //	struct rect rectLosBndBox;
 //	Point2d dstscrimCnt;

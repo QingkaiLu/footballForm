@@ -170,6 +170,21 @@ void rectifyImageToField(string matchesFile, const Mat &srcImg, Mat &dstImg, Mat
 	drawFieldModel(dstImg);
 }
 
+void rectifyImageToField(string matchesFile, const Mat &srcImg, Mat &dstImg, Mat &homoMat, const Mat &tMosFrmToPMosFrmHomo)
+{
+	vector<Point2f> srcPoints, dstPoints;
+//	readMatches(matchesFile, srcPoints, dstPoints);
+	readMatchesNew(matchesFile, srcPoints, dstPoints);
+
+	vector<Point2f> transSrcPnts;
+	perspectiveTransform(srcPoints, transSrcPnts, tMosFrmToPMosFrmHomo);
+	homoMat = findHomography(transSrcPnts, dstPoints);
+	Size distImgSize(FieldWidth, FieldLength);
+	dstImg.create(FieldLength, FieldWidth, CV_32FC3);
+	warpPerspective(srcImg, dstImg, homoMat, distImgSize);
+	drawFieldModel(dstImg);
+}
+
 void transFieldToImage(string matchesFile, Mat &dstImg, Mat &homoMat)
 {
 	vector<Point2f> srcPoints, dstPoints;

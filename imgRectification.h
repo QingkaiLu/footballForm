@@ -39,6 +39,8 @@ bool readMatchesNew(std::string matchesFile, std::vector<cv::Point2f> &srcPoints
 
 void rectifyImageToField(std::string matchesFile, const cv::Mat &srcImg, cv::Mat &dstImg, cv::Mat &homoMat);
 
+void rectifyImageToField(std::string matchesFile, const cv::Mat &srcImg, cv::Mat &dstImg, cv::Mat &homoMat, const cv::Mat &tMosFrmToPMosFrmHomo);
+
 //void homoTransPoint(const cv::Point2d &srcPnt, const cv::Mat &homoMat, cv::Point2d &dstPnt);
 
 void transFieldToImage(std::string matchesFile, cv::Mat &dstImg, cv::Mat &homoMat);
