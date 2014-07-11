@@ -6,38 +6,80 @@
 
 #include "commonStructs.h"
 #include "imgRectification.h"
+#include "fieldModel.h"
 
 using namespace std;
 using namespace cv;
 
-void drawFieldModel(Mat &fieldModel) {
-//	fieldModel.create(FieldLength, FieldWidth, CV_32FC3);
+//void setFldModel(int fldModel)
+//{
+//	if(fldModel == 1)
+//	{
+//		//high school football field model with size: 300 * 159(approximation of 160) feet
+//		//http://www.sportsknowhow.com/football/field-dimensions/high-school-football-field-dimensions.html
+//		fld->fieldLength = 795;
+//		fld->fieldWidth = 1800;
+//		fld->endZoneWidth = 150;
+//		fld->yardLinesDist = 75;
+//		fld->hashLinesDist = 15;
+//		fld->hashToSideLineDist = 265;
+//		fld->hashLinesLen = 10;
+//	}
+//	else if(fldModel == 2)
+//	{
+//		//college football field model with size: 300 * 160 feet
+//		//http://www.sportsknowhow.com/football/field-dimensions/ncaa-football-field-dimensions.html
+//		fld->fieldLength = 800;
+//		fld->fieldWidth = 1800;
+//		fld->endZoneWidth = 150;
+//		fld->yardLinesDist = 75;
+//		fld->hashLinesDist = 15;
+//		fld->hashToSideLineDist = 300;
+//		fld->hashLinesLen = 10;
+//	}
+//	else
+//	{
+//		cout << "Wrong field model!" << endl;
+//	}
+//}
+
+imgRectfication::imgRectfication(int fldModel)
+{
+	fld = new fieldModel(fldModel);
+}
+imgRectfication::~imgRectfication()
+{
+	if(fld != NULL)
+		delete fld;
+}
+void imgRectfication::drawFieldModel(Mat &fieldModel) {
+//	fieldModel.create(fld->fieldLength, fld->fieldWidth, CV_32FC3);
 //	fieldModel = Scalar(0,255,0);
 	//draw yard lines
-	for (int i = EndZoneWidth - 1; i < (FieldWidth - EndZoneWidth); i += YardLinesDist) {
-		line(fieldModel, Point2i(i, 0), Point2i(i, FieldLength - 1), CV_RGB(200, 200, 200), 2, 8, 0);
+	for (int i = fld->endZoneWidth - 1; i < (fld->fieldWidth - fld->endZoneWidth); i += fld->yardLinesDist) {
+		line(fieldModel, Point2i(i, 0), Point2i(i, fld->fieldLength - 1), CV_RGB(200, 200, 200), 2, 8, 0);
 	}
 	//draw hash lines
-	for (int i = EndZoneWidth - 1; i < (FieldWidth - EndZoneWidth); i += HashLinesDist) {
-		line(fieldModel, Point2i(i, HashToSideLineDist - 1 - HashLinesLen * 0.5),
-				Point2i(i, HashToSideLineDist - 1 + HashLinesLen * 0.5), CV_RGB(200, 200, 200), 2, 8, 0);
-		line(fieldModel, Point2i(i, (FieldLength - 1 - HashToSideLineDist) - HashLinesLen * 0.5),
-				Point2i(i, (FieldLength - 1 - HashToSideLineDist) + HashLinesLen * 0.5), CV_RGB(200, 200, 200), 2, 8, 0);
+	for (int i = fld->endZoneWidth - 1; i < (fld->fieldWidth - fld->endZoneWidth); i += fld->hashLinesDist) {
+		line(fieldModel, Point2i(i, fld->hashToSideLineDist - 1 - fld->hashLinesLen * 0.5),
+				Point2i(i, fld->hashToSideLineDist - 1 + fld->hashLinesLen * 0.5), CV_RGB(200, 200, 200), 2, 8, 0);
+		line(fieldModel, Point2i(i, (fld->fieldLength - 1 - fld->hashToSideLineDist) - fld->hashLinesLen * 0.5),
+				Point2i(i, (fld->fieldLength - 1 - fld->hashToSideLineDist) + fld->hashLinesLen * 0.5), CV_RGB(200, 200, 200), 2, 8, 0);
 	}
 	return;
 }
 
-void getFieldYardLines(vector<vector<Point2d> > &yardLines)
+void imgRectfication::getFieldYardLines(vector<vector<Point2d> > &yardLines)
 {
-	for (int i = EndZoneWidth - 1; i < (FieldWidth - EndZoneWidth); i += YardLinesDist) {
+	for (int i = fld->endZoneWidth - 1; i < (fld->fieldWidth - fld->endZoneWidth); i += fld->yardLinesDist) {
 		vector<Point2d> yardLine;
 		yardLine.push_back(Point2i(i, 0));
-		yardLine.push_back(Point2i(i, FieldLength - 1));
+		yardLine.push_back(Point2i(i, fld->fieldLength - 1));
 		yardLines.push_back(yardLine);
 	}
 }
 
-bool readMatches(string matchesFile, vector<Point2f> &srcPoints, vector<Point2f> &dstPoints)
+bool imgRectfication::readMatches(string matchesFile, vector<Point2f> &srcPoints, vector<Point2f> &dstPoints)
 {
 	ifstream fin(matchesFile.c_str());
 	//x: 250 y: 82 Yard: r 40 Hash: 0
@@ -74,21 +116,20 @@ bool readMatches(string matchesFile, vector<Point2f> &srcPoints, vector<Point2f>
 
 		int yardLnId = yardLnDist / 5;
 
-		dstPnt.x = EndZoneWidth + YardLinesDist * yardLnId;
-		//dstPnt.y = HashToSideLineDist * hashId;
+		dstPnt.x = fld->endZoneWidth + fld->yardLinesDist * yardLnId;
+		//dstPnt.y = fld->hashToSideLineDist * hashId;
 		switch (hashId){
 		case 0:
 			dstPnt.y = .0;
 			break;
 		case 1:
-			dstPnt.y = HashToSideLineDist;
+			dstPnt.y = fld->hashToSideLineDist;
 			break;
 		case 2:
-			dstPnt.y = FieldLength - HashToSideLineDist;
+			dstPnt.y = fld->fieldLength - fld->hashToSideLineDist;
 			break;
-
 		case 3:
-			dstPnt.y = FieldLength;
+			dstPnt.y = fld->fieldLength;
 			break;
 		default:
 			cout << "Wrong hash id" << endl;
@@ -106,7 +147,7 @@ bool readMatches(string matchesFile, vector<Point2f> &srcPoints, vector<Point2f>
 	return true;
 }
 
-bool readMatchesNew(string matchesFile, vector<Point2f> &srcPoints, vector<Point2f> &dstPoints)
+bool imgRectfication::readMatchesNew(string matchesFile, vector<Point2f> &srcPoints, vector<Point2f> &dstPoints)
 {
 	ifstream fin(matchesFile.c_str());
 	//x: 250 y: 82 Yard: r 40 Hash: 0
@@ -158,19 +199,19 @@ bool readMatchesNew(string matchesFile, vector<Point2f> &srcPoints, vector<Point
 //	dstPnt.y = dstPntVec.at<double>(1, 0) / w;
 //}
 
-void rectifyImageToField(string matchesFile, const Mat &srcImg, Mat &dstImg, Mat &homoMat)
+void imgRectfication::rectifyImageToField(string matchesFile, const Mat &srcImg, Mat &dstImg, Mat &homoMat)
 {
 	vector<Point2f> srcPoints, dstPoints;
 //	readMatches(matchesFile, srcPoints, dstPoints);
 	readMatchesNew(matchesFile, srcPoints, dstPoints);
 	homoMat = findHomography(srcPoints, dstPoints);
-	Size distImgSize(FieldWidth, FieldLength);
-	dstImg.create(FieldLength, FieldWidth, CV_32FC3);
+	Size distImgSize(fld->fieldWidth, fld->fieldLength);
+	dstImg.create(fld->fieldLength, fld->fieldWidth, CV_32FC3);
 	warpPerspective(srcImg, dstImg, homoMat, distImgSize);
 	drawFieldModel(dstImg);
 }
 
-void rectifyImageToField(string matchesFile, const Mat &srcImg, Mat &dstImg, Mat &homoMat, const Mat &tMosFrmToPMosFrmHomo)
+void imgRectfication::rectifyImageToField(string matchesFile, const Mat &srcImg, Mat &dstImg, Mat &homoMat, const Mat &tMosFrmToPMosFrmHomo)
 {
 	vector<Point2f> srcPoints, dstPoints;
 //	readMatches(matchesFile, srcPoints, dstPoints);
@@ -179,24 +220,99 @@ void rectifyImageToField(string matchesFile, const Mat &srcImg, Mat &dstImg, Mat
 	vector<Point2f> transSrcPnts;
 	perspectiveTransform(srcPoints, transSrcPnts, tMosFrmToPMosFrmHomo);
 	homoMat = findHomography(transSrcPnts, dstPoints);
-	Size distImgSize(FieldWidth, FieldLength);
-	dstImg.create(FieldLength, FieldWidth, CV_32FC3);
+	Size distImgSize(fld->fieldWidth, fld->fieldLength);
+	dstImg.create(fld->fieldLength, fld->fieldWidth, CV_32FC3);
 	warpPerspective(srcImg, dstImg, homoMat, distImgSize);
 	drawFieldModel(dstImg);
 }
 
-void transFieldToImage(string matchesFile, Mat &dstImg, Mat &homoMat)
+void imgRectfication::transFieldToImage(string matchesFile, Mat &dstImg, Mat &homoMat)
 {
 	vector<Point2f> srcPoints, dstPoints;
 //	readMatches(matchesFile, dstPoints, srcPoints);
 	readMatchesNew(matchesFile, dstPoints, srcPoints);
 	homoMat = findHomography(srcPoints, dstPoints);;
 	Mat srcImg;
-	srcImg.create(FieldLength, FieldWidth, CV_32FC3);
+	srcImg.create(fld->fieldLength, fld->fieldWidth, CV_32FC3);
 	drawFieldModel(srcImg);
 	Size distImgSize(imgXLen, imgYLen);
 	dstImg.create(imgYLen, imgXLen, CV_32FC3);
 	warpPerspective(srcImg, dstImg, homoMat, distImgSize);
+}
+
+void imgRectfication::transFieldToImage(string matchesFile, const Mat &srcImg, Mat &dstImg, Mat &homoMat)
+{
+	vector<Point2f> srcPoints, dstPoints;
+//	readMatches(matchesFile, dstPoints, srcPoints);
+	readMatchesNew(matchesFile, dstPoints, srcPoints);
+	homoMat = findHomography(srcPoints, dstPoints);;
+	Size distImgSize(imgXLen, imgYLen);
+	dstImg.create(imgYLen, imgXLen, CV_32FC3);
+	warpPerspective(srcImg, dstImg, homoMat, distImgSize);
+}
+
+void imgRectfication::saveMat(string fileName, Mat& matData)
+{
+    if (matData.empty())
+    {
+        cout << "Empty matrix!" << endl;
+        return;
+    }
+
+    ofstream outFile(fileName.c_str(), ios_base::out);
+    if (!outFile.is_open())
+    {
+        cout << "Cann't open file!" << endl;
+        return;
+    }
+
+    for (int r = 0; r < matData.rows; r++)
+    {
+        for (int c = 0; c < matData.cols; c++)
+        {
+            outFile << matData.at<float>(r,c) << " " ;
+        }
+        outFile << endl;
+    }
+
+    outFile.close();
+
+    return;
+}
+
+void imgRectfication::readMat(string fileName, Mat& matData, int rows, int cols)
+{
+	ifstream fin(fileName.c_str());
+
+	if(!fin.is_open())
+	{
+		cout << "Can't open file " << fileName << endl;
+		return;
+	}
+
+	fin.seekg(0, ios::end);
+	if (fin.tellg() == 0) {
+		cout << "Empty file " << fileName << endl;
+		return;
+	}
+	fin.seekg(0, ios::beg);
+
+	if (!matData.empty())
+		matData.release();
+	matData.create(rows, cols, CV_32F);
+
+    for (int r = 0; r < matData.rows; r++)
+    {
+        for (int c = 0; c < matData.cols; c++)
+        {
+        	float data = .0;
+        	fin >> data;
+        	matData.at<float>(r,c) = data;
+        }
+    }
+
+    fin.close();
+
 }
 
 //int main(int argc, char* argv[])

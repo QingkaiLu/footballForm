@@ -6,7 +6,9 @@
 
 #include "commonStructs.h"
 
-void readOdLabels(std::string odLabelFilePath, std::vector<playId> &pIds, std::vector<char> &dir, std::vector<char> &odLabel);
+//void readOdLabels(std::string odLabelFilePath, std::vector<playId> &pIds, std::vector<char> &dir, std::vector<char> &odLabel);
+
+void readOdLabels(std::string odLabelFilePath, std::vector<playId> &pIds, std::vector<std::string> &dir, std::vector<std::string> &odLabel);
 
 bool readOdFeatData(const std::vector<std::string> &fileNames, std::vector<std::vector<double> > &features,
 		std::vector<double> &labels, int featureNum);
@@ -14,7 +16,8 @@ bool readOdFeatData(const std::vector<std::string> &fileNames, std::vector<std::
 		std::vector<double> &labels, int featureNum, const std::vector<std::string> &losCntFileNames, int losCntIdx);
 //The order of levels matters for spatial pyramid, otherwise need to resort.
 //The order should be from levels of bigger grids to smaller grids.
-void setUpGrids(std::vector<CvSize> &gridSizes, std::vector<cv::Point2i> &gridsNum);
+//void setUpGrids(std::vector<CvSize> &gridSizes, std::vector<cv::Point2i> &gridsNum, int fldModel);
+void setUpGrids(std::vector<CvSize> &gridSizes, std::vector<cv::Point2i> &gridsNum, int fldModel);
 
 bool readLosCntIds(const std::vector<std::string> &fileNames, std::vector<int> &losCntIds);
 
@@ -24,12 +27,12 @@ void extracOdVidFeatsRts(int gameId, std::vector<playId> &pIds);
 
 //void extracOdMissFeatsRts(int gameId, std::vector<playId> &pIds);
 
-void plotOdExp(const std::vector<std::vector<int> > &fVecOPlaysExp,
-		const std::vector<std::vector<int> > &fVecDPlaysExp,
-		const std::vector<CvSize> &gridSizes, const std::vector<cv::Point2i> &gridsNum);
+//void plotOdExp(const std::vector<std::vector<int> > &fVecOPlaysExp,
+//		const std::vector<std::vector<int> > &fVecDPlaysExp,
+//		const std::vector<CvSize> &gridSizes, const std::vector<cv::Point2i> &gridsNum);
 
 //compute the feature vectors on the left and right side of los
-void computeLeftRightFeats(const std::vector<int> &games, int expMode);
+void computeLeftRightFeats(const std::vector<int> &games, int expMode, const std::vector<int> &gamesFld);
 
 void getPlayIds(const std::vector<int> &games, std::vector<playId> &pIds);
 
@@ -83,7 +86,9 @@ void computeOdFeatsIndRspNoExp(const std::vector<int> &games, int fMode);
 //expMode == 1: with expectation
 // if fMode is 1, subtract left side features with right features
 // if fMode is 2, concatenate left and right side features
-int extractFeatures(const std::vector<int> &games, int expMode, int fMode);
+int extractFeatures(const std::vector<int> &games, const std::vector<int> &gamesFld, int expMode, int fMode);
+
+int extractFeatures(const std::vector<int> &games, const std::vector<int> &gamesFld);
 
 
 #endif

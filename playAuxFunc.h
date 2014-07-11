@@ -24,8 +24,6 @@ double distFromPntToLine(Point2d pt0, struct yardLine yLine);
  */
 double closestLnDist(vector<struct yardLine> lines);
 
-bool readScrimLines(string filePath, vector<rect>& scrimLns);
-
 void plotRect(Mat& img, struct rect& scrimLnRect, Scalar clr);
 
 void drawLines(Mat& dst, struct yardLine yLine, CvScalar color);
@@ -62,5 +60,7 @@ void plotYardLnsAndLos(Mat& img, struct rect& scrimLnRect, vector<vector<Point2d
 void plotScanLines(Mat& img, vector<rect> &scanLines, const vector<int> &featureVec);
 
 bool compLns(struct yardLine l1, struct yardLine l2);
+
+void plotPlayerPosBox(Mat& img, struct rect& playerBox, string pTypeString);
 
 #endif

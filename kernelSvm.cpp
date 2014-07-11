@@ -17,12 +17,12 @@ double computeTwoFVecKernel(const vector<double> &fVec1, const vector<double> &f
 {
 	vector<CvSize> gridSizes;
 	vector<Point2i> gridsNum;
-	setUpGrids(gridSizes, gridsNum);
+	setUpGrids(gridSizes, gridsNum, 1);
 
 	int startIdx = 0;
 	int levelsNum = gridsNum.size();
 	vector<double> kernelsDifLevels(levelsNum, 0.0);
-	for(unsigned int l = 0; l < levelsNum; ++l)
+	for(int l = 0; l < levelsNum; ++l)
 	{
 		int gNum = gridsNum[l].x * gridsNum[l].y;
 		for(int j = startIdx; j < gNum; ++j)
@@ -109,7 +109,7 @@ void computeOdSpPmdPKernel(const vector<int> &games)
 	{
 		vector<double> fVecOnePlayLeft = fVecPlaysLeftAllGames[i];
 		vector<double> fVecOnePlayRight = fVecPlaysRightAllGames[i];
-		int maxFVal = .0;
+		double maxFVal = .0;
 		for(unsigned int j = 0; j < fVecOnePlayLeft.size(); ++j)
 				maxFVal += fVecOnePlayLeft[j] + fVecOnePlayRight[j];
 		if(maxFVal != 0)

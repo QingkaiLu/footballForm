@@ -364,6 +364,7 @@ void randTreeLeavePlayOut(const vector<int> &trainTestGames, const vector<vector
 		string path = "randTreesTrainData/features/featuresGame" + gameIdStr + "Rect";
 //		string path = "randTreesTrainData/features/featsGame" + gameIdStr + "RectOverallExp";
 //		string path = "randTreesTrainData/features/featuresGame" + gameIdStr + "RectIndRsp";
+//		string path = "randTreesTrainData/features/offSgFeatsGame" + gameIdStr + "Rect";
 		trainTestGamePaths.push_back(path);
 //		string losCntIdsFile = "randTreesTrainData/losCnt/losCntIdsGame" + gameIdStr;
 //		losCntFileNames.push_back(losCntIdsFile);
@@ -373,7 +374,6 @@ void randTreeLeavePlayOut(const vector<int> &trainTestGames, const vector<vector
 	vector<double> trainTestLabs;
 	readOdFeatData(trainTestGamePaths, trainTestFeats, trainTestLabs, featNumPerPlay);
 //	readOdFeatData(trainTestGamePaths, trainTestFeats, trainTestLabs, featNumPerPlay, losCntFileNames, 1);
-
 
 	int errPlays = 0;
 	for(unsigned int k = 0; k < trainTestLabs.size(); ++k)
@@ -741,25 +741,52 @@ void leavePlayOutTest(const vector<int> &games, int expMode, int odExpMode)
 
 }
 
+void leavePlayOutTest(const vector<int> &games)
+{
+//	int games[3] = {2, 8, 9};//, 10};
+
+	vector<vector<playId> > pIdsTestGames;
+	vector<int> trainTestGames;
+
+	for(unsigned int i = 0; i < games.size(); ++i)
+	{
+		vector<playId> pIds;
+		//extracOdVidFeatsRts(games[i], pIds);
+		getPlayIds(games[i], pIds);
+		pIdsTestGames.push_back(pIds);
+		trainTestGames.push_back(games[i]);
+	}
+
+		randTreeLeavePlayOut(trainTestGames, pIdsTestGames);
+
+}
+
 int main()
 //int randTrees()
 {
 	vector<int> games;
+	vector<int> gamesFld;
 	games.push_back(2);
+	gamesFld.push_back(1);
 	games.push_back(8);
-	games.push_back(9);
+	gamesFld.push_back(1);
 	games.push_back(10);
-//	games.push_back(9);
+	gamesFld.push_back(1);
+	games.push_back(9);
+	gamesFld.push_back(2);
 
-	int expMode = 0;
-	int odExpMode = 2;
-	int featureMode = 2;
+//	int expMode = 0;
+//	int odExpMode = 2;
+//	int featureMode = 2;
 
-	extractFeatures(games, expMode, featureMode);
+//	extractFeatures(games, expMode, featureMode);
+
+	extractFeatures(games, gamesFld);
 
 //	leaveGamesOutTest(games);
 //	expMode = 0;
-	leavePlayOutTest(games, expMode, odExpMode);
+//	leavePlayOutTest(games, expMode, odExpMode);
+	leavePlayOutTest(games);
 
 	return 1;
 }

@@ -224,42 +224,42 @@ int ahc()
     for(unsigned int i = 0; i < offFeatsVec.size(); ++i)
     	for(unsigned int j = 0; j < offFeatsVec[i].size(); ++j)
     		featuresMat[i][j] = offFeatsVec[i][j];
-    int numClsts = 2;
+    int numClsts = 10;
 
-//    clusterizerstate s;
-//    ahcreport rep;
-//    clusterizercreate(s);
-//    clusterizersetahcalgo(s, 1);
+    clusterizerstate s;
+    ahcreport rep;
+    clusterizercreate(s);
+    clusterizersetahcalgo(s, 1);
 
 //    //Euclidean distance
 //    ae_int_t disttype = 2;
 //    clusterizersetpoints(s, featuresMat, disttype);
 
-//    real_2d_array d;
-//    d.setlength(playsNum, playsNum);
-//    double ratio = 1.0; // playsNum;
-//    for(unsigned int i = 0; i < kernels.size(); ++i)
-//    	for(unsigned int j = 0; j < kernels.size(); ++j)
-//    		d[i][j] = ratio - kernels[i][j];
-//    clusterizersetdistances(s, d, true);
-//
-//
-//    clusterizerrunahc(s, rep);
-////    printf("%s\n", rep.z.tostring().c_str());
-//    integer_1d_array cidx;
-//    integer_1d_array cz;
-//    clusterizergetkclusters(rep, numClsts, cidx, cz);
-////    printf("%s\n", cidx.tostring().c_str());
-//    cout << cidx.tostring() << endl;
+    real_2d_array d;
+    d.setlength(playsNum, playsNum);
+    double ratio = 1.0; // playsNum;
+    for(unsigned int i = 0; i < kernels.size(); ++i)
+    	for(unsigned int j = 0; j < kernels.size(); ++j)
+    		d[i][j] = ratio - kernels[i][j];
+    clusterizersetdistances(s, d, true);
 
-    clusterizerstate s;
-    kmeansreport kMeansRep;
 
-    clusterizercreate(s);
-    clusterizersetpoints(s, featuresMat, 2);
-    clusterizersetkmeanslimits(s, 5, 0);
-    clusterizerrunkmeans(s, numClsts, kMeansRep);
-    integer_1d_array cidx = kMeansRep.cidx;
+    clusterizerrunahc(s, rep);
+    printf("%s\n", rep.z.tostring().c_str());
+    integer_1d_array cidx;
+    integer_1d_array cz;
+    clusterizergetkclusters(rep, numClsts, cidx, cz);
+//    printf("%s\n", cidx.tostring().c_str());
+    cout << cidx.tostring() << endl;
+
+//    clusterizerstate s;
+//    kmeansreport kMeansRep;
+//
+//    clusterizercreate(s);
+//    clusterizersetpoints(s, featuresMat, 2);
+//    clusterizersetkmeanslimits(s, 5, 0);
+//    clusterizerrunkmeans(s, numClsts, kMeansRep);
+//    integer_1d_array cidx = kMeansRep.cidx;
 
 	vector<playId> pIdsGames;
 

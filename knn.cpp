@@ -33,9 +33,10 @@ void knnLeavePlayOut(vector<int> &trainTestGames, vector<std::vector<playId> > &
 		if(trainTestGames[i] < 10)
 			gameIdStr = "0" + gameIdStr;
 //		string path = "randTreesTrainData/featureVecsGame" + gameIdStr;
-		string path = "randTreesTrainData/features/featuresGame" + gameIdStr + "Rect";
+//		string path = "randTreesTrainData/features/featuresGame" + gameIdStr + "Rect";
 //		string path = "randTreesTrainData/features/featsGame" + gameIdStr + "RectOverallExp";
 //		string path = "randTreesTrainData/features/featuresGame" + gameIdStr + "RectIndRsp";
+		string path = "randTreesTrainData/features/offSgFeatsGame" + gameIdStr + "Rect";
 		trainTestGamePaths.push_back(path);
 	}
 
@@ -141,10 +142,10 @@ void leavePlayOutTestKnn(const vector<int> &games)
 int knn()
 {
 	vector<int> games;
-	games.push_back(2);
+//	games.push_back(2);
 	games.push_back(8);
-	games.push_back(9);
-	games.push_back(10);
+//	games.push_back(9);
+//	games.push_back(10);
 
 //	int expMode = 0;
 //	int odExpMode = 1;

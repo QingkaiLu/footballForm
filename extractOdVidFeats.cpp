@@ -7,6 +7,7 @@
 #include "play.h"
 #include "imgRectification.h"
 #include "playAuxFunc.h"
+#include "fieldModel.h"
 
 using namespace std;
 using namespace cv;
@@ -242,7 +243,7 @@ void extracOdVidFeatsRts(int gameId, vector<playId> &pIds)
 	ofstream fout(featuresFile.c_str());
 	vector<CvSize> gridSizes;
 	vector<Point2i> gridsNum;
-	setUpGrids(gridSizes, gridsNum);
+	setUpGrids(gridSizes, gridsNum, 1);
 
 	//compute feature vector for each play with all models
 	for(unsigned int i = 0; i < pIds.size(); ++i)
@@ -314,8 +315,9 @@ void extracOdVidFeatsRts(int gameId, vector<playId> &pIds)
 	return;
 }
 
-void setUpGrids(vector<CvSize> &gridSizes, vector<Point2i> &gridsNum)
+void setUpGrids(vector<CvSize> &gridSizes, vector<Point2i> &gridsNum, int fldModel)
 {
+	fieldModel fldMod(fldModel);
 //	gridSizes.push_back(cvSize(YardLinesDist * 6, YardLinesDist * 8));
 //	gridsNum.push_back(Point2i(1, 2));
 //	gridSizes.push_back(cvSize(YardLinesDist * 2, YardLinesDist * 2));
@@ -325,133 +327,154 @@ void setUpGrids(vector<CvSize> &gridSizes, vector<Point2i> &gridsNum)
 
 //	gridSizes.push_back(cvSize(YardLinesDist * 8, YardLinesDist * 8 * 2));
 //	gridsNum.push_back(Point2i(1, 1));
-	gridSizes.push_back(cvSize(YardLinesDist * 8, YardLinesDist * 8));
+
+	gridSizes.push_back(cvSize(fldMod.yardLinesDist * 8, fldMod.yardLinesDist * 8));
 	gridsNum.push_back(Point2i(1, 2));
-	gridSizes.push_back(cvSize(YardLinesDist * 4, YardLinesDist * 4));
+	gridSizes.push_back(cvSize(fldMod.yardLinesDist * 4, fldMod.yardLinesDist * 4));
 	gridsNum.push_back(Point2i(2, 4));
-	gridSizes.push_back(cvSize(YardLinesDist * 2, YardLinesDist * 2));
+	gridSizes.push_back(cvSize(fldMod.yardLinesDist * 2, fldMod.yardLinesDist * 2));
 	gridsNum.push_back(Point2i(4, 8));
-	gridSizes.push_back(cvSize(YardLinesDist, YardLinesDist));
+	gridSizes.push_back(cvSize(fldMod.yardLinesDist, fldMod.yardLinesDist));
 	gridsNum.push_back(Point2i(8, 16));
 
+//	gridSizes.push_back(cvSize(YardLinesDist * 3, YardLinesDist * 4));
+//	gridsNum.push_back(Point2i(1, 1));
+//	gridSizes.push_back(cvSize(YardLinesDist * 1.5, YardLinesDist * 2));
+//	gridsNum.push_back(Point2i(2, 2));
+//	gridSizes.push_back(cvSize(YardLinesDist * 1, YardLinesDist * 1));
+//	gridsNum.push_back(Point2i(3, 4));
+//	gridSizes.push_back(cvSize(YardLinesDist * 0.5, YardLinesDist * 0.5));
+//	gridsNum.push_back(Point2i(6, 8));
+
+//	gridSizes.push_back(cvSize(YardLinesDist * 3, YardLinesDist * 2));
+//	gridsNum.push_back(Point2i(1, 1));
+//	gridSizes.push_back(cvSize(YardLinesDist * 1, YardLinesDist * 0.5));
+//	gridsNum.push_back(Point2i(3, 2));
+//	gridSizes.push_back(cvSize(YardLinesDist * 0.5, YardLinesDist * 0.25));
+//	gridsNum.push_back(Point2i(6, 4));
+
 }
 
-void plotOdExp(const vector<vector<int> > &fVecOPlaysExp,
-		const vector<vector<int> > &fVecDPlaysExp,
-		const vector<CvSize> &gridSizes, const vector<Point2i> &gridsNum)
-{
-//	Mat fld(FieldLength, FieldWidth, CV_32FC3);
-//	drawFieldModel(fld);
+//void plotOdExp(const vector<vector<int> > &fVecOPlaysExp,
+//		const vector<vector<int> > &fVecDPlaysExp,
+//		const vector<CvSize> &gridSizes, const vector<Point2i> &gridsNum)
+//{
+////	Mat fld(FieldLength, FieldWidth, CV_32FC3);
+////	drawFieldModel(fld);
+////
+////	vector<rect> scanRects;
+////	Point2d rectScrimCnt = Point2d(FieldWidth / 2.0, FieldLength / 2.0);
+//	Point2d rectScrimCnt = Point2d(FieldWidth / 2.0, FieldLength);
 //
-//	vector<rect> scanRects;
-//	Point2d rectScrimCnt = Point2d(FieldWidth / 2.0, FieldLength / 2.0);
-	Point2d rectScrimCnt = Point2d(FieldWidth / 2.0, FieldLength);
+//	int d = 0;
+//	direction dir = leftDir;
+//	if(dir == leftDir)
+//	{
+//		d = -1;
+//	}
+//	else if (dir == rightDir)
+//	{
+//		d = 1;
+//	}
+//	else
+//		return;
+//
+//	int gridsIdx = 0;
+//	for(unsigned int k = 0; k < gridSizes.size(); ++k)
+//		{
+//			int gridsIdOneLevel = 0;
+//			vector<rect> scanRectsOneLevel;
+//			vector<int> zerosVec(gridsNum[k].x * gridsNum[k].y, 0);
+//			vector<vector<int> > fVecOPlaysExpOneLevel(losCntBins, zerosVec), fVecDPlaysExpOneLevel(losCntBins, zerosVec);
+//
+//			for(int i = 0; i < gridsNum[k].x; ++i)
+//			{
+//				double maxYardLnXCoord, minYardLnXCoord;
+//
+//				if(dir == rightDir)
+//				{
+//					maxYardLnXCoord = rectScrimCnt.x + d * (i + 1) * gridSizes[k].width;
+//					minYardLnXCoord = rectScrimCnt.x + d * i * gridSizes[k].width;
+//				}
+//				else
+//				{
+//					maxYardLnXCoord = rectScrimCnt.x + d * i * gridSizes[k].width;
+//					minYardLnXCoord = rectScrimCnt.x + d * (i + 1) * gridSizes[k].width;
+//				}
+//
+//				for(int j = -0.5 * gridsNum[k].y; j < gridsNum[k].y * 0.5; ++j)
+//				{
+//					struct rect scanR;
+//
+//		//			double lowY = rectScrimCnt.y + j * (FieldLength / 10.0);
+//		//			double upY = rectScrimCnt.y + (j + 1) * (FieldLength / 10.0);
+//					double lowY = rectScrimCnt.y + j * gridSizes[k].height;
+//					double upY = rectScrimCnt.y + (j + 1) * gridSizes[k].height;
+//		//			cout << "lowY: " << lowY << endl;
+//		//			cout << "upY: " << upY << endl;
+//					scanR.a = Point2d(minYardLnXCoord, lowY);
+//					scanR.b = Point2d(minYardLnXCoord, upY);
+//					scanR.c = Point2d(maxYardLnXCoord, upY);
+//					scanR.d = Point2d(maxYardLnXCoord, lowY);
+//
+//					scanRectsOneLevel.push_back(scanR);
+//					for(unsigned int i = 0; i < fVecOPlaysExp.size(); ++i)
+//					{
+//						fVecOPlaysExpOneLevel[i][gridsIdOneLevel] = fVecOPlaysExp[i][gridsIdx];
+//						fVecDPlaysExpOneLevel[i][gridsIdOneLevel] = fVecDPlaysExp[i][gridsIdx];
+//					}
+//
+//					++gridsIdOneLevel;
+//					++gridsIdx;
+//
+//				}
+//			}
+//
+//			ostringstream convertLev;
+//			convertLev << k;
+//			string levStr = convertLev.str();
+//
+//			for(unsigned int i = 0; i < fVecOPlaysExpOneLevel.size(); ++i)
+//			{
+//				Mat fld(2.0 * FieldLength, FieldWidth, CV_32FC3);
+//				fld = Scalar(0,0,0);
+//				//drawFieldModel(fld);
+//				ostringstream convertIdx;
+//				convertIdx << i;
+//				string idxStr = convertIdx.str();
+//				plotScanLines(fld, scanRectsOneLevel, fVecOPlaysExpOneLevel[i]);
+//				string plotPath = "ExpPlots/expOLos" + idxStr + "lev" + levStr + ".jpg";
+//				imwrite(plotPath, fld);
+//			}
+//
+//			for(unsigned int i = 0; i < fVecDPlaysExpOneLevel.size(); ++i)
+//			{
+//				Mat fld(2.0 * FieldLength, FieldWidth, CV_32FC3);
+//				fld = Scalar(0,0,0);
+//				//drawFieldModel(fld);
+//				ostringstream convertIdx;
+//				convertIdx << i;
+//				string idxStr = convertIdx.str();
+//				plotScanLines(fld, scanRectsOneLevel, fVecDPlaysExpOneLevel[i]);
+//				string plotPath = "ExpPlots/expDLos" + idxStr + "lev" + levStr + ".jpg";
+//				imwrite(plotPath, fld);
+//			}
+//		}
+//
+//}
 
-	int d = 0;
-	direction dir = leftDir;
-	if(dir == leftDir)
-	{
-		d = -1;
-	}
-	else if (dir == rightDir)
-	{
-		d = 1;
-	}
-	else
-		return;
-
-	int gridsIdx = 0;
-	for(unsigned int k = 0; k < gridSizes.size(); ++k)
-		{
-			int gridsIdOneLevel = 0;
-			vector<rect> scanRectsOneLevel;
-			vector<int> zerosVec(gridsNum[k].x * gridsNum[k].y, 0);
-			vector<vector<int> > fVecOPlaysExpOneLevel(losCntBins, zerosVec), fVecDPlaysExpOneLevel(losCntBins, zerosVec);
-
-			for(int i = 0; i < gridsNum[k].x; ++i)
-			{
-				double maxYardLnXCoord, minYardLnXCoord;
-
-				if(dir == rightDir)
-				{
-					maxYardLnXCoord = rectScrimCnt.x + d * (i + 1) * gridSizes[k].width;
-					minYardLnXCoord = rectScrimCnt.x + d * i * gridSizes[k].width;
-				}
-				else
-				{
-					maxYardLnXCoord = rectScrimCnt.x + d * i * gridSizes[k].width;
-					minYardLnXCoord = rectScrimCnt.x + d * (i + 1) * gridSizes[k].width;
-				}
-
-				for(int j = -0.5 * gridsNum[k].y; j < gridsNum[k].y * 0.5; ++j)
-				{
-					struct rect scanR;
-
-		//			double lowY = rectScrimCnt.y + j * (FieldLength / 10.0);
-		//			double upY = rectScrimCnt.y + (j + 1) * (FieldLength / 10.0);
-					double lowY = rectScrimCnt.y + j * gridSizes[k].height;
-					double upY = rectScrimCnt.y + (j + 1) * gridSizes[k].height;
-		//			cout << "lowY: " << lowY << endl;
-		//			cout << "upY: " << upY << endl;
-					scanR.a = Point2d(minYardLnXCoord, lowY);
-					scanR.b = Point2d(minYardLnXCoord, upY);
-					scanR.c = Point2d(maxYardLnXCoord, upY);
-					scanR.d = Point2d(maxYardLnXCoord, lowY);
-
-					scanRectsOneLevel.push_back(scanR);
-					for(unsigned int i = 0; i < fVecOPlaysExp.size(); ++i)
-					{
-						fVecOPlaysExpOneLevel[i][gridsIdOneLevel] = fVecOPlaysExp[i][gridsIdx];
-						fVecDPlaysExpOneLevel[i][gridsIdOneLevel] = fVecDPlaysExp[i][gridsIdx];
-					}
-
-					++gridsIdOneLevel;
-					++gridsIdx;
-
-				}
-			}
-
-			ostringstream convertLev;
-			convertLev << k;
-			string levStr = convertLev.str();
-
-			for(unsigned int i = 0; i < fVecOPlaysExpOneLevel.size(); ++i)
-			{
-				Mat fld(2.0 * FieldLength, FieldWidth, CV_32FC3);
-				fld = Scalar(0,0,0);
-				//drawFieldModel(fld);
-				ostringstream convertIdx;
-				convertIdx << i;
-				string idxStr = convertIdx.str();
-				plotScanLines(fld, scanRectsOneLevel, fVecOPlaysExpOneLevel[i]);
-				string plotPath = "ExpPlots/expOLos" + idxStr + "lev" + levStr + ".jpg";
-				imwrite(plotPath, fld);
-			}
-
-			for(unsigned int i = 0; i < fVecDPlaysExpOneLevel.size(); ++i)
-			{
-				Mat fld(2.0 * FieldLength, FieldWidth, CV_32FC3);
-				fld = Scalar(0,0,0);
-				//drawFieldModel(fld);
-				ostringstream convertIdx;
-				convertIdx << i;
-				string idxStr = convertIdx.str();
-				plotScanLines(fld, scanRectsOneLevel, fVecDPlaysExpOneLevel[i]);
-				string plotPath = "ExpPlots/expDLos" + idxStr + "lev" + levStr + ".jpg";
-				imwrite(plotPath, fld);
-			}
-		}
-
-}
-
-void computeLeftRightFeats(const vector<int> &games, int expMode)
+void computeLeftRightFeats(const vector<int> &games, int expMode, const vector<int> &gamesFld)
 {
-	vector<CvSize> gridSizes;
-	vector<Point2i> gridsNum;
-	setUpGrids(gridSizes, gridsNum);
+//	vector<CvSize> gridSizes;
+//	vector<Point2i> gridsNum;
+//	setUpGrids(gridSizes, gridsNum, 1);
 
 	for(unsigned int g = 0; g < games.size(); ++g)
 	{
+		vector<CvSize> gridSizes;
+		vector<Point2i> gridsNum;
+		setUpGrids(gridSizes, gridsNum, gamesFld[g]);
+
 		int gameId = games[g];
 		ostringstream convertGameId;
 		convertGameId << gameId ;
@@ -484,6 +507,8 @@ void computeLeftRightFeats(const vector<int> &games, int expMode)
 //		gridSizes.push_back(cvSize(YardLinesDist, YardLinesDist));
 //		gridsNum.push_back(Point2i(6, 16));
 
+//		setFldModel(1);
+
 		//compute feature vector for each play with all models
 		for(unsigned int i = 0; i < pIds.size(); ++i)
 		{
@@ -492,7 +517,7 @@ void computeLeftRightFeats(const vector<int> &games, int expMode)
 			cout << "gameId: " << pIds[i].gameId << " vidId: " << pIds[i].vidId << endl;
 			if (p != NULL)
 				delete p;
-			p = new play(pIds[i]);
+			p = new play(pIds[i], gamesFld[g]);
 			p->setUp();
 
 			direction d = nonDir;
@@ -502,7 +527,7 @@ void computeLeftRightFeats(const vector<int> &games, int expMode)
 //			p->extractOdGridsFeatRectIndRsp(d, fVecOnePlayLeft, gridSizes, gridsNum);
 
 			delete p;
-			p = new play(pIds[i]);
+			p = new play(pIds[i], gamesFld[g]);
 			p->setUp();
 			d = rightDir;
 			p->extractOdGridsFeatRect(d, fVecOnePlayRight, gridSizes, gridsNum, expMode);
@@ -697,10 +722,10 @@ void computeOdExpFeats(const vector<int> &games)
 	fOutOExp.close();
 	fOutDExp.close();
 
-	vector<CvSize> gridSizes;
-	vector<Point2i> gridsNum;
-	setUpGrids(gridSizes, gridsNum);
-	plotOdExp(fVecOPlaysExp, fVecDPlaysExp, gridSizes, gridsNum);
+//	vector<CvSize> gridSizes;
+//	vector<Point2i> gridsNum;
+//	setUpGrids(gridSizes, gridsNum);
+//	plotOdExp(fVecOPlaysExp, fVecDPlaysExp, gridSizes, gridsNum);
 }
 
 
@@ -798,10 +823,10 @@ void computeOverallExpFeats(const vector<int> &games)
 	fOutLeftExp.close();
 	fOutRightExp.close();
 
-	vector<CvSize> gridSizes;
-	vector<Point2i> gridsNum;
-	setUpGrids(gridSizes, gridsNum);
-	plotOdExp(fVecLeftPlaysExp, fVecRightPlaysExp, gridSizes, gridsNum);
+//	vector<CvSize> gridSizes;
+//	vector<Point2i> gridsNum;
+//	setUpGrids(gridSizes, gridsNum);
+//	plotOdExp(fVecLeftPlaysExp, fVecRightPlaysExp, gridSizes, gridsNum);
 }
 
 
@@ -1528,9 +1553,9 @@ void computeOdFeatsIndRspNoExp(const vector<int> &games, int fMode)
 
 
 //int main()
-int extractFeatures(const vector<int> &games, int expMode, int fMode)
+int extractFeatures(const vector<int> &games, const vector<int> &gamesFld, int expMode, int fMode)
 {
-	computeLeftRightFeats(games, expMode);
+	computeLeftRightFeats(games, expMode, gamesFld);
 
 	if(expMode == 1)
 	{
@@ -1565,6 +1590,17 @@ int extractFeatures(const vector<int> &games, int expMode, int fMode)
 		//concatenation
 		//computeOdFeatsNoExp(games, fMode);
 	}
+
+	return 1;
+}
+
+
+int extractFeatures(const vector<int> &games, const vector<int> &gamesFld)
+{
+	int expMode = 0;
+	int fMode = 2;
+	computeLeftRightFeats(games, expMode, gamesFld);
+	computeOdFeatsNoExp(games, fMode);
 
 	return 1;
 }

@@ -28,6 +28,8 @@ void leaveGamesOutTest(const std::vector<int> &games);
 //expMode == 1: with expectation
 void leavePlayOutTest(const std::vector<int> &games, int expMode, int odExpMode);
 
+void leavePlayOutTest(const std::vector<int> &games);
+
 void splitOdSamples(const cv::Mat &featureMat, const cv::Mat &labelsMat,
 		std::vector<cv::Mat> &dMats, std::vector<cv::Mat> &oMats);
 

@@ -33,6 +33,10 @@
 //#define fNumPerPlayOneSide 122
 #define featNumPerPlay 170*2
 #define fNumPerPlayOneSide 170
+//#define featNumPerPlay 65
+//#define fNumPerPlayOneSide 65
+//#define featNumPerPlay 17
+//#define fNumPerPlayOneSide 17
 
 //class playerBndBox;
 //#include "playerBndBox.h"
@@ -83,10 +87,11 @@ struct yardLine
  *
  * 	a,b,c,d in a counter-clock wise direction, but a can not be guaranteed to be the left up vertex
  */
+//Actually, rect can be any quadrangle.
 struct rect{
 	cv::Point2d a, b, c, d;
-	int trksNum;
-	int vidId;
+//	int trksNum;
+//	int vidId;
 };
 
 struct playId{
@@ -109,5 +114,11 @@ struct playId{
 //	//playerBndBox pBox;
 //	double score;
 //};
+
+enum playerTypeId{
+	lowWR,
+	upWR,
+	runBack
+};
 
 #endif

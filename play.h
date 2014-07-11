@@ -13,7 +13,7 @@ using namespace cv;
 
 
 // predMos: 0 -> true MOS; 1 -> predicated MOS
-#define predMos 1
+#define predMos 0
 
 //losMethod == 2 => new los based on sheng's gradient los;
 //losMethod == 1 => old los based on klt or new los based on the
@@ -35,9 +35,12 @@ using namespace cv;
 //number of bins of the los cnt between two hash lines
 #define losCntBins 3
 
+class fieldModel;
+
 class play{
 public:
 	play(struct playId p);
+	play(struct playId p, int fldModel);
 	~play();
 	void getMos();
 	bool getYardLines();
@@ -63,6 +66,7 @@ public:
 	void detectEllipsesFromFg(vector<RotatedRect> &ellipses);
 
 	void rectification();
+	void rectification(Mat& orgToFldHMat);
 	void writeMatchPnts();
 	void extractOdStripsFeatRect(direction dir, vector<int> &featureVec);
 	void extractOdGridsFeatRect(direction dir, vector<int> &featureVec);
@@ -81,6 +85,17 @@ public:
 	void extOdGridsFeatFldCrdOrigImg(direction dir, vector<int> &featureVec);
 	void extOdGridsFeatFldCrdOrigImg(direction dir, vector<int> &featureVec,
 			const vector<CvSize> &gridSizes, const vector<Point2i> &gridsNum, int expMode);
+
+	void detectOnePlayerTypePosRect(playerTypeId pTypeId, direction offSide);
+	void detectPlayerTypesPosRect(const vector<playerTypeId> &pTypeIds, direction offSide);
+
+	void detectOnePlayerTypePosOrig(playerTypeId pTypeId, direction offSide, const Mat &fldToOrgHMat);
+	void detectPlayerTypesPosOrig(const vector<playerTypeId> &pTypeIds, direction offSide);
+
+	//generate the foreground of the rectfied Mos frame by background subtraction with panorama.
+	void genRectMosFrmFgBgSub();
+	//generate the foreground of the original Mos frame by background subtraction with panorama.
+	void genOrigMosFrmFgBgSub();
 
 public:
 	struct playId pId;
@@ -116,6 +131,9 @@ public:
 	direction preDir, trueDir;
 	Mat fgImage, mosFrame;
 	Mat rectImage, rectMosFrame;
+
+	fieldModel* fld;
+	int fldModType;
 
 };
 

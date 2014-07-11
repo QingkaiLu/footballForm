@@ -55,39 +55,6 @@ double closestLnDist(vector<struct yardLine> lines)
 	return minDist;
 }
 
-bool readScrimLines(string filePath, vector<rect>& scrimLns)
-{
-	ifstream fin(filePath.c_str());
-	if(!fin.is_open())
-	{
-		cout<<"Can't open file "<<filePath<<endl;
-		return false;
-	}
-
-	fin.seekg(0, ios::end);
-	if (fin.tellg() == 0) {
-		cout<<"Empty line file"<<filePath<<endl;
-		return false;
-	}
-
-	fin.seekg(0, ios::beg);
-
-	while(!fin.eof())
-	{
-		struct rect r;
-		fin >> r.vidId;
-		fin >> r.a.x >> r.a.y;
-		fin >> r.b.x >> r.b.y;
-		fin >> r.c.x >> r.c.y;
-		fin >> r.d.x >> r.d.y;
-
-		scrimLns.push_back(r);
-	}
-
-	fin.close();
-
-	return true;
-}
 
 void plotRect(Mat& img, struct rect& rct, Scalar clr)
 {
@@ -512,5 +479,13 @@ void plotYardLnsAndLos(Mat& img, struct rect& scrimLnRect, vector<vector<Point2d
 	return;
 }
 
+void plotPlayerPosBox(Mat& img, struct rect& playerBox, string pTypeString)
+{
+	int fontFace = 0;
+	double fontScale = 1;
+	int thickness = 2;
+	plotRect(img, playerBox, CV_RGB(0, 0, 255));
+	putText(img, pTypeString, playerBox.a, fontFace, fontScale, CV_RGB(255, 0, 255), thickness,8);
 
+}
 
