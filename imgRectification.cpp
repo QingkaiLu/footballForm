@@ -208,7 +208,7 @@ void imgRectfication::rectifyImageToField(string matchesFile, const Mat &srcImg,
 	Size distImgSize(fld->fieldWidth, fld->fieldLength);
 	dstImg.create(fld->fieldLength, fld->fieldWidth, CV_32FC3);
 	warpPerspective(srcImg, dstImg, homoMat, distImgSize);
-	drawFieldModel(dstImg);
+	//drawFieldModel(dstImg);
 }
 
 void imgRectfication::rectifyImageToField(string matchesFile, const Mat &srcImg, Mat &dstImg, Mat &homoMat, const Mat &tMosFrmToPMosFrmHomo)

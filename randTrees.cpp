@@ -761,8 +761,8 @@ void leavePlayOutTest(const vector<int> &games)
 
 }
 
-int main()
-//int randTrees()
+//int main()
+int randTrees()
 {
 	vector<int> games;
 	vector<int> gamesFld;

@@ -1999,12 +1999,16 @@ void play::genOrigMosFrmFgBgSub()
 
 	Scalar m = mean(fgImg);
 	Mat dstFgImg;
-	double threshold_value = m.val[0] * 0.5;
+	double threshold_value = m.val[0] * 3.0;
 	double max_BINARY_value = 255;
 	threshold(fgImg, dstFgImg, threshold_value, max_BINARY_value, THRESH_BINARY);
 	fgImg = dstFgImg;
 
-	string fgImgPath = "fgMosImagesPano/Game" + gameIdStr + "/video0" + vidIdxStr + ".jpg";
+//	fgImg = mosFrame;
+//	fgImg = mosFrame - bgOrig;
+
+	string fgImgPath = "fgMosImagesPano/Game" + gameIdStr + "/video0" + vidIdxStr + "SubThresh4.jpg";
+//	string fgImgPath = "fgMosImagesPano/Game" + gameIdStr + "/video0" + vidIdxStr + ".jpg";
 	imwrite(fgImgPath, fgImg);
 }
 

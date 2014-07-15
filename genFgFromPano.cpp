@@ -41,13 +41,13 @@ void genFg()
 	return;
 }
 
-//int main()
-//{
-//	genFg();
-////	Mat M1(2, 2, CV_32F, 1);
-////	cout << M1 - 1<< endl;
-//	return 1;
-//}
+int main()
+{
+	genFg();
+//	Mat M1(2, 2, CV_32F, 1);
+//	cout << M1 - 1<< endl;
+	return 1;
+}
 
 //int main(  )
 //{
