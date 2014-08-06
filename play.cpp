@@ -12,6 +12,7 @@
 #include "matchImgs.h"
 #include "fieldModel.h"
 #include "playerType.h"
+#include "formTree.h"
 
 //int fld->fieldLength;
 //int fld->fieldWidth;
@@ -1988,6 +1989,13 @@ void play::genOrigMosFrmFgBgSub()
 	Mat bgOrig, homoMat;
 	imgRect.transFieldToImage(matchesFile, rectPano, bgOrig, homoMat);
 
+//	string panoPath = "panorama/panoGame" + gameIdStr + ".jpg";
+//	Mat pano = imread(panoPath.c_str(), CV_LOAD_IMAGE_COLOR);
+//	string homMatPath = "homog/Game" + gameIdStr + "/" + vidIdxStr + ".txt";
+//	vector<Mat> homoList = readHomographs(homMatPath);
+//	Mat bgOrig;
+//	warpPerspective(pano, bgOrig, homoList[mos - 1].inv(), mosFrame.size());
+
 	//Mat fgImg = mosFrame - bgOrig;
 
 	Mat mosGrayFrm;
@@ -1995,21 +2003,360 @@ void play::genOrigMosFrmFgBgSub()
 	Mat bgOrigGray;
 	cvtColor(bgOrig, bgOrigGray, CV_RGB2GRAY);
 
-	Mat fgImg = mosGrayFrm - bgOrigGray;
+	Mat mosFrmEdge, bgOrigEdge;
+	Canny(mosGrayFrm, mosFrmEdge, 50, 200, 3);
+	Canny(bgOrigGray, bgOrigEdge, 50, 200, 3);
 
-	Scalar m = mean(fgImg);
-	Mat dstFgImg;
-	double threshold_value = m.val[0] * 3.0;
-	double max_BINARY_value = 255;
-	threshold(fgImg, dstFgImg, threshold_value, max_BINARY_value, THRESH_BINARY);
-	fgImg = dstFgImg;
+//	Mat fgImg = subtractEdgeImg(mosFrmEdge, bgOrigEdge);
+//	Mat fgImg = mosFrmEdge - bgOrigEdge;
 
-//	fgImg = mosFrame;
+//	Mat fgImg = mosGrayFrm - bgOrigGray;
+
+//	Scalar m = mean(fgImg);
+//	Mat dstFgImg;
+//	double threshold_value = m.val[0] * 3.0;
+//	double max_BINARY_value = 255;
+//	threshold(fgImg, dstFgImg, threshold_value, max_BINARY_value, THRESH_BINARY);
+//	fgImg = dstFgImg;
+
+	Mat fgImg = mosFrmEdge;
 //	fgImg = mosFrame - bgOrig;
 
-	string fgImgPath = "fgMosImagesPano/Game" + gameIdStr + "/video0" + vidIdxStr + "SubThresh4.jpg";
-//	string fgImgPath = "fgMosImagesPano/Game" + gameIdStr + "/video0" + vidIdxStr + ".jpg";
-	imwrite(fgImgPath, fgImg);
+//	string fgImagePath = "fgMosImagesPano/Game" + gameIdStr + "/video0" + vidIdxStr + "Bg.jpg";
+	string fgImagePath = "fgMosImagesPano/Game" + gameIdStr + "/video0" + vidIdxStr + ".jpg";
+	imwrite(fgImagePath, fgImg);
+}
+
+void play::getBgImg()
+{
+	string rectPanoPath = "panorama/rectPanoGame" + gameIdStr + ".jpg";
+	Mat rectPano = imread(rectPanoPath.c_str(), CV_LOAD_IMAGE_COLOR);
+
+	string matchesFile = "imgRectMatches/Game" + gameIdStr + "/vid" + vidIdxStr + "RectMatchesNew";
+	imgRectfication imgRect(fldModType);
+	Mat bgOrig, homoMat;
+	imgRect.transFieldToImage(matchesFile, rectPano, bgOrig, homoMat);
+
+//	string panoPath = "panorama/panoGame" + gameIdStr + ".jpg";
+//	Mat pano = imread(panoPath.c_str(), CV_LOAD_IMAGE_COLOR);
+//	string homMatPath = "homog/Game" + gameIdStr + "/" + vidIdxStr + ".txt";
+//	vector<Mat> homoList = readHomographs(homMatPath);
+//	Mat bgOrig;
+//	warpPerspective(pano, bgOrig, homoList[mos - 1].inv(), mosFrame.size());
+
+//	string bgStr;
+//	int bgVidId = pId.vidId;
+//	ostringstream convertVidId;
+//	convertVidId << bgVidId;
+//	bgStr = convertVidId.str();
+//	if(bgVidId < 10)
+//		bgStr = "00" + bgStr;
+//	else if(pId.vidId < 100 )
+//		bgStr = "0" + bgStr;
+
+	Mat bgOrigGray;
+	cvtColor(bgOrig, bgOrigGray, CV_RGB2GRAY);
+
+	Mat bgOrigEdge;
+	Canny(bgOrigGray, bgOrigEdge, 50, 200, 3);
+
+	string bgImagePath = "bgMosImagesPano/Game" + gameIdStr + "/" + gameIdStr + "1" +  vidIdxStr + ".jpg";
+//	imwrite(bgImagePath, bgOrig);
+	Mat bgOrigEdgeClr;
+	cvtColor(bgOrigEdge,bgOrigEdgeClr, COLOR_GRAY2RGB);
+	imwrite(bgImagePath, bgOrigEdgeClr);
+
+}
+
+void play::cutAreaOutsideFld()
+{
+//	Mat orgToFldHMat;
+//	rectification(orgToFldHMat);
+//
+//	vector<Point2d> srcImgVec, dstImgVec;
+//
+//	for(int y = 0; y < imgYLen; ++y)
+//		for(int x = 0; x < imgXLen; ++x)
+//			srcImgVec.push_back(Point2d(x, y));
+//
+//	perspectiveTransform(srcImgVec, dstImgVec, orgToFldHMat);
+//
+//	int imgPntsIdx = 0;
+//	for(int y = 0; y < imgYLen; ++y)
+//		for(int x = 0; x < imgXLen; ++x)
+//		{
+//			double fldX = dstImgVec[imgPntsIdx].x;
+//			double fldY = dstImgVec[imgPntsIdx].y;
+//			++imgPntsIdx;
+//			bool outside = false;
+//			if( fldY < 0 || fldY >= fld->fieldLength)
+//				outside = true;
+//			if( fldX < 0 || fldX >= fld->fieldWidth)
+//				outside = true;
+//
+//			if(outside)
+//			{
+//				mosFrame.at<cv::Vec3b>(y,x)[0] = 0;
+//				mosFrame.at<cv::Vec3b>(y,x)[1] = 0;
+//				mosFrame.at<cv::Vec3b>(y,x)[2] = 0;
+//			}
+////			Point3_<uchar>* p = fgImage.ptr<Point3_<uchar> >(y, x);
+////			p->x = 0;
+////			p->y = 0;
+////			p->z = 0;
+//		}
+//
+//	Mat mosGrayFrm;
+//	cvtColor(mosFrame, mosGrayFrm, CV_RGB2GRAY);
+//
+//	Mat mosFrmEdge;
+//	Canny(mosGrayFrm, mosFrmEdge, 50, 200, 3);
+
+	string mosImagePath = "mosImagesCut/Game" + gameIdStr + "/" + gameIdStr +"0" + vidIdxStr + ".jpg";
+	imwrite(mosImagePath, mosFrame);
+
+//	Mat mosFrmEdgeClr;
+//	cvtColor(mosFrmEdge, mosFrmEdgeClr, COLOR_GRAY2RGB);
+//	imwrite(mosImagePath, mosFrmEdgeClr);
+
 }
 
 
+void play::drawPlayerBndBoxes()
+{
+	string playersFilePath = "playerBndBoxes/Game" + gameIdStr + "/" + gameIdStr +"0" + vidIdxStr + ".players";
+	ifstream fin(playersFilePath.c_str());
+
+	if(!fin.is_open())
+	{
+		cout << "Can't open file " << playersFilePath << endl;
+		return;
+	}
+
+	fin.seekg(0, ios::end);
+	if (fin.tellg() == 0) {
+		cout << "Empty file " << playersFilePath << endl;
+		return;
+	}
+	fin.seekg(0, ios::beg);
+	vector<double> scores;
+	vector<struct rect> players;
+	vector<double> areas;
+	while(!fin.eof())
+	{
+		int playId = NEGINF;
+		double score = NEGINF;
+		double xMin, yMin, xMax, yMax;
+		fin >> playId >> score >> xMin >> yMin >> xMax >> yMax;
+		if(score == NEGINF)
+			break;
+		struct rect player;
+		player.a = Point2d(xMin, yMin);
+		player.b = Point2d(xMin, yMax);
+		player.c = Point2d(xMax, yMax);
+		player.d = Point2d(xMax, yMin);
+		scores.push_back(score);
+		players.push_back(player);
+		double area = (xMax - xMin) * (yMax - yMin);
+		areas.push_back(area);
+	}
+
+	int fontFace = 0;
+	double fontScale = 1;
+	int thickness = 2;
+
+	for(unsigned int i = 0; i < players.size(); ++i)
+	{
+		plotRect(mosFrame, players[i], Scalar(0, 0, 255));
+		//string scoreStr = to_string(scores[i]);
+//		double score = double(int(scores[i] * 100)) / 100.0;
+//		ostringstream convertScore;
+//		convertScore << score;
+//		string scoreStr = convertScore.str();
+//		putText(mosFrame, scoreStr, players[i].b, fontFace, fontScale, CV_RGB(0, 0, 255), thickness,8);
+//
+//		double area = double(int(areas[i] * 100)) / 100.0;
+//		ostringstream convertArea;
+//		convertArea << area;
+//		string areaStr = convertArea.str();
+//		putText(mosFrame, areaStr, players[i].a, fontFace, fontScale, CV_RGB(255, 255, 0), thickness,8);
+	}
+
+	fin.close();
+
+	string playersImagePath = "Results/Game" + gameIdStr + "/playersPlots/" + gameIdStr +"0" + vidIdxStr + ".jpg";
+	imwrite(playersImagePath, mosFrame);
+}
+
+void play::drawPlayerBndBoxesRectFld()
+{
+	Mat orgToFldHMat;
+	rectification(orgToFldHMat);
+	Mat fldToOrgHMat;
+	getOverheadFieldHomo(fldToOrgHMat);
+
+	string playersFilePath = "playerBndBoxes/Game" + gameIdStr + "/" + gameIdStr +"0" + vidIdxStr + ".players";
+	vector<double> scores;
+	vector<struct rect> players;
+	vector<double> areas;
+	readPlayerBndBoxes(playersFilePath, scores, players, areas);
+//	ifstream fin(playersFilePath.c_str());
+//
+//	if(!fin.is_open())
+//	{
+//		cout << "Can't open file " << playersFilePath << endl;
+//		return;
+//	}
+//
+//	fin.seekg(0, ios::end);
+//	if (fin.tellg() == 0) {
+//		cout << "Empty file " << playersFilePath << endl;
+//		return;
+//	}
+//	fin.seekg(0, ios::beg);
+//	vector<double> scores;
+//	vector<struct rect> players;
+//	vector<double> areas;
+//	while(!fin.eof())
+//	{
+//		int playId = NEGINF;
+//		double score = NEGINF;
+//		double xMin, yMin, xMax, yMax;
+//		fin >> playId >> score >> xMin >> yMin >> xMax >> yMax;
+//		if(score == NEGINF)
+//			break;
+//		struct rect player;
+//		player.a = Point2d(xMin, yMin);
+//		player.b = Point2d(xMin, yMax);
+//		player.c = Point2d(xMax, yMax);
+//		player.d = Point2d(xMax, yMin);
+//		scores.push_back(score);
+//		players.push_back(player);
+//		double area = (xMax - xMin) * (yMax - yMin);
+//		areas.push_back(area);
+//	}
+
+	int fontFace = 0;
+	double fontScale = 1;
+	int thickness = 2;
+
+	for(unsigned int i = 0; i < players.size(); ++i)
+	{
+		struct rect player = players[i];
+		vector<Point2d> srcPlayerVec, dstPlayerVec;
+		srcPlayerVec.push_back(player.a);
+		srcPlayerVec.push_back(player.b);
+		srcPlayerVec.push_back(player.c);
+		srcPlayerVec.push_back(player.d);
+		perspectiveTransform(srcPlayerVec, dstPlayerVec, orgToFldHMat);
+		player.a = dstPlayerVec[0];
+		player.b = dstPlayerVec[1];
+		player.c = dstPlayerVec[2];
+		player.d = dstPlayerVec[3];
+
+		plotRect(rectMosFrame, player, Scalar(0, 0, 255));
+		//string scoreStr = to_string(scores[i]);
+		double score = double(int(scores[i] * 100)) / 100.0;
+		ostringstream convertScore;
+		convertScore << score;
+		string scoreStr = convertScore.str();
+		putText(rectMosFrame, scoreStr, player.b, fontFace, fontScale, CV_RGB(0, 0, 255), thickness,8);
+
+		double area = double(int(areas[i] * 100)) / 100.0;
+		ostringstream convertArea;
+		convertArea << area;
+		string areaStr = convertArea.str();
+		putText(rectMosFrame, areaStr, player.a, fontFace, fontScale, CV_RGB(255, 255, 0), thickness,8);
+	}
+
+//	fin.close();
+
+	string playersImagePath = "Results/Game" + gameIdStr + "/playersPlots/" + gameIdStr +"0" + vidIdxStr + ".jpg";
+	imwrite(playersImagePath, rectMosFrame);
+
+
+}
+
+void play::detectForms(direction offSide)
+{
+	Mat orgToFldHMat;
+	rectification(orgToFldHMat);
+	Mat fldToOrgHMat;
+	getOverheadFieldHomo(fldToOrgHMat);
+
+	string formsFile = "formModel/formations";
+	vector<string> formations;
+	readFormsFile(formsFile, offSide, formations);
+
+	string playersFilePath = "playerBndBoxes/Game" + gameIdStr + "/" + gameIdStr +"0" + vidIdxStr + ".players";
+	vector<double> scores;
+	vector<struct rect> players;
+	vector<double> areas;
+	readPlayerBndBoxes(playersFilePath, scores, players, areas);
+
+	vector<Point2d> playersLocSet, pLocSetFld, offensePLocSetFld;
+	for(unsigned int i = 0; i < players.size(); ++i)
+	{
+		Point2d p = Point2d(0.5 * (players[i].a.x + players[i].c.x),
+				0.5 * (players[i].a.y + players[i].c.y) );
+		playersLocSet.push_back(p);
+	}
+	perspectiveTransform(playersLocSet, pLocSetFld, orgToFldHMat);
+
+	vector<double> offenseScores;
+	for(unsigned int i = 0; i < pLocSetFld.size(); ++i)
+	{
+		bool offense = false;
+		if(offSide == leftDir && pLocSetFld[i].x <= rectLosCnt.x)
+			offense = true;
+		else if(offSide == rightDir && pLocSetFld[i].x >= rectLosCnt.x)
+			offense = true;
+
+		if(offense && fld->isPointInsideFld(pLocSetFld[i]))
+		{
+			offensePLocSetFld.push_back(pLocSetFld[i]);
+			offenseScores.push_back(scores[i]);
+		}
+	}
+//	cout << "pLocSetFld " << pLocSetFld.size() << endl;
+//	cout << "offensePLocSetFld " << offensePLocSetFld.size() << endl;
+//	cout << "offenseScores " << offenseScores.size() << endl;
+	double bestFormScore = NEGINF;
+	formTree* bestForm;
+//	for(unsigned int i = 0; i < formations.size(); ++i)
+//	{
+//		formTree fTree(formations[i]);
+//		fTree.setupPartsLocSetStarModel(rectLosCnt, offensePLocSetFld, offenseScores);
+//		fTree.findBestFormStarModel();
+//		if(fTree.formBestScore >= bestFormScore)
+//		{
+//			bestFormScore = fTree.formBestScore;
+//			bestForm = &fTree;
+////			bestForm->plotFormOrigImg(mosFrame, fldToOrgHMat);
+////			drawPlayerBndBoxes();
+//		}
+//	}
+	vector<formTree*> fTrees;
+	for(unsigned int i = 0; i < formations.size(); ++i)
+	{
+		formTree* f = new formTree(formations[i]);
+//		f->setupPartsLocSetStarModel(rectLosCnt, offensePLocSetFld, offenseScores);
+		f->setupPartsLocSetStarModel(rectLosCnt, pLocSetFld, scores);
+		f->findBestFormStarModel();
+		if(f->formBestScore >= bestFormScore)
+		{
+			bestFormScore = f->formBestScore;
+			bestForm = f;
+			fTrees.push_back(f);
+//			bestForm->plotFormOrigImg(mosFrame, fldToOrgHMat);
+//			drawPlayerBndBoxes();
+		}
+	}
+
+
+	cout << bestForm->formName << bestForm->formBestScore << endl;
+
+	bestForm->plotFormOrigImg(mosFrame, fldToOrgHMat);
+	drawPlayerBndBoxes();
+
+}

@@ -31,7 +31,11 @@ void genFg()
 			{
 				cout << "fg" << endl;
 				//p.genRectMosFrmFgBgSub();
-				p.genOrigMosFrmFgBgSub();
+				//p.genOrigMosFrmFgBgSub();
+				//p.getBgImg();
+				//p.cutAreaOutsideFld();
+				//p.drawPlayerBndBoxes();
+				p.drawPlayerBndBoxesRectFld();
 			}
 
 		}
@@ -41,11 +45,24 @@ void genFg()
 	return;
 }
 
-int main()
+//int main()
+int fgMain()
 {
 	genFg();
-//	Mat M1(2, 2, CV_32F, 1);
-//	cout << M1 - 1<< endl;
+//	string rectPanoPath = "panorama/rectPanoGame02.jpg";
+//	Mat rectPano = imread(rectPanoPath.c_str(), CV_LOAD_IMAGE_COLOR);
+//	Mat rectPanoGray;
+//	cvtColor(rectPano, rectPanoGray, CV_RGB2GRAY);
+//	Mat rectPanoEdge;
+//	Canny(rectPanoGray, rectPanoEdge, 50, 200, 3);
+//
+//	string rectPanoCannyPath = "panorama/rectPanoGame02Canny.jpg";
+////	imwrite(bgImagePath, bgOrig);
+//	Mat rectPanoEdgeClr;
+//	cvtColor(rectPanoEdge,rectPanoEdgeClr, COLOR_GRAY2RGB);
+//	imwrite(rectPanoCannyPath, rectPanoEdgeClr);
+
+
 	return 1;
 }
 

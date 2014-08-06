@@ -489,3 +489,129 @@ void plotPlayerPosBox(Mat& img, struct rect& playerBox, string pTypeString)
 
 }
 
+Mat subtractEdgeImg(const Mat &img, const Mat &bg) {
+//Mat subtractEdgeImg(Mat img, Mat bg, Mat originImg, Mat originBg) {
+	Mat result = Mat::zeros(img.size(), img.type());
+//	Mat result2 = Mat::zeros(img.size(), img.type());
+	for (int i = 0; i < img.rows; i++) {
+		for (int j = 0; j < img.cols; j++) {
+			uchar imgTmp = img.at<uchar>(i, j);
+			uchar minDiff = imgTmp - bg.at<uchar>(i, j);
+//			int minR = i, minC = j;
+			for (int r = MAX(0, i-5); r < MIN(i+5, img.rows); r++) {
+				for (int c = MAX(0, j-5); c < MIN(j+5, img.cols); c++) {
+					if (imgTmp - bg.at<uchar>(r, c) < minDiff) {
+						minDiff = imgTmp - bg.at<uchar>(r, c);
+					}
+				}
+			}
+			result.at<uchar>(i, j) = minDiff;
+//			result2.at<uchar>(i, j) = originImg.at<uchar>(i, j) - originBg.at<uchar>(i, j);
+		}
+	}
+	return result;
+}
+
+vector<Mat> readHomographs(const string &fileName) {
+	ifstream fin(fileName.c_str());
+	vector<Mat> results;
+	int frameNum;
+	fin >> frameNum;
+
+	for (int i = 0; i < frameNum; i++) {
+		int row, col;
+		fin >> row >> col;
+		Mat A(row, col, CV_64F);
+		for (int r = 0; r < 3; r++) {
+			for (int c = 0; c < 3; c++) {
+				double tmp;
+				fin >> tmp;
+				A.at<double>(r, c) = tmp;
+			}
+		}
+		results.push_back(A);
+	}
+	return results;
+}
+
+void readFormsFile(const string &formsFile, direction offSide, vector<string> &formations)
+{
+	string dir;
+	if(offSide == leftDir)
+		dir = "Left";
+	else if(offSide == rightDir)
+		dir = "Right";
+	else
+	{
+		cout << "Wrong direction in detectForms()." << endl;
+		return;
+	}
+	ifstream fin(formsFile.c_str());
+
+	if(!fin.is_open())
+	{
+		cout << "Can't open file " << formsFile << endl;
+		return;
+	}
+
+	fin.seekg(0, ios::end);
+	if (fin.tellg() == 0) {
+		cout << "Empty file " << formsFile << endl;
+		return;
+	}
+	fin.seekg(0, ios::beg);
+	while(!fin.eof())
+	{
+		string form;
+		fin >> form;
+		if(form.empty())
+			break;
+		form = form + dir;
+		formations.push_back(form);
+//		cout << form << endl;
+	}
+	fin.close();
+}
+
+void readPlayerBndBoxes(const string &playersFilePath, 	vector<double> &scores,
+		vector<struct rect> &players, vector<double> &areas)
+{
+	ifstream fin(playersFilePath.c_str());
+
+	if(!fin.is_open())
+	{
+		cout << "Can't open file " << playersFilePath << endl;
+		return;
+	}
+
+	fin.seekg(0, ios::end);
+	if (fin.tellg() == 0) {
+		cout << "Empty file " << playersFilePath << endl;
+		return;
+	}
+	fin.seekg(0, ios::beg);
+//	vector<double> scores;
+//	vector<struct rect> players;
+//	vector<double> areas;
+	while(!fin.eof())
+	{
+		int playId = NEGINF;
+		double score = NEGINF;
+		double xMin, yMin, xMax, yMax;
+		fin >> playId >> score >> xMin >> yMin >> xMax >> yMax;
+		if(score == NEGINF)
+			break;
+//		cout << playId << score << endl; // >> xMin >> yMin >> xMax >> yMax;
+		struct rect player;
+		player.a = Point2d(xMin, yMin);
+		player.b = Point2d(xMin, yMax);
+		player.c = Point2d(xMax, yMax);
+		player.d = Point2d(xMax, yMin);
+		scores.push_back(score);
+		players.push_back(player);
+		double area = (xMax - xMin) * (yMax - yMin);
+		areas.push_back(area);
+	}
+
+	fin.close();
+}

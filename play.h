@@ -97,6 +97,14 @@ public:
 	//generate the foreground of the original Mos frame by background subtraction with panorama.
 	void genOrigMosFrmFgBgSub();
 
+	void getBgImg();
+	void cutAreaOutsideFld();
+
+	void drawPlayerBndBoxes();
+	void drawPlayerBndBoxesRectFld();
+
+	void detectForms(direction offSide);
+
 public:
 	struct playId pId;
 

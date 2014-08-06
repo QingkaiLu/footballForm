@@ -36,3 +36,8 @@ fieldModel::fieldModel(int fldModel)
 		cout << "Wrong field model!" << endl;
 	}
 }
+
+bool fieldModel::isPointInsideFld(cv::Point2d p)
+{
+	return (p.x >= 1 && p.x <= fieldWidth && p.y >=1 && p.y <= fieldLength);
+}

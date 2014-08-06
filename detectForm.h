@@ -5,4 +5,6 @@
 
 void detectForm(const std::vector<int> &games, const std::vector<int> &gamesFld, const std::vector<playerTypeId> &pTypeIds);
 
+void detectForm(const std::vector<int> &games, const std::vector<int> &gamesFld);
+
 #endif

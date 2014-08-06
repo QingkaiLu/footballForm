@@ -24,7 +24,8 @@ double distFromPntToLine(Point2d pt0, struct yardLine yLine);
  */
 double closestLnDist(vector<struct yardLine> lines);
 
-void plotRect(Mat& img, struct rect& scrimLnRect, Scalar clr);
+//void plotRect(Mat& img, struct rect& scrimLnRect, Scalar clr);
+void plotRect(Mat& img, struct rect& rct, Scalar clr);
 
 void drawLines(Mat& dst, struct yardLine yLine, CvScalar color);
 
@@ -62,5 +63,14 @@ void plotScanLines(Mat& img, vector<rect> &scanLines, const vector<int> &feature
 bool compLns(struct yardLine l1, struct yardLine l2);
 
 void plotPlayerPosBox(Mat& img, struct rect& playerBox, string pTypeString);
+
+Mat subtractEdgeImg(const Mat &img, const Mat &bg);
+
+vector<Mat> readHomographs(const string &fileName);
+
+void readFormsFile(const string &formsFile, direction offSide, vector<string> &formations);
+
+void readPlayerBndBoxes(const string &playersFilePath, 	vector<double> &scores,
+		vector<struct rect> &players, vector<double> &areas);
 
 #endif
