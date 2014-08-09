@@ -73,4 +73,9 @@ void readFormsFile(const string &formsFile, direction offSide, vector<string> &f
 void readPlayerBndBoxes(const string &playersFilePath, 	vector<double> &scores,
 		vector<struct rect> &players, vector<double> &areas);
 
+void plotRectAvgClr(Mat& img, const struct rect& rct, Scalar clr, Point3d &avgClr);
+
+void getOffensePlayers(vector<Point2d> &playersLocSet, vector<Point2d> &pLocSetFld,
+		play* p, vector<struct rect> &players, direction offDir);
+
 #endif

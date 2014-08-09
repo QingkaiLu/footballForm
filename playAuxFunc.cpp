@@ -5,6 +5,7 @@
 #include <limits>
 #include "playAuxFunc.h"
 #include "play.h"
+#include "fieldModel.h"
 
 double distFromPntToLine(Point2d pt0, struct yardLine yLine)
 {
@@ -615,3 +616,156 @@ void readPlayerBndBoxes(const string &playersFilePath, 	vector<double> &scores,
 
 	fin.close();
 }
+
+void plotRectAvgClr(Mat& img, const struct rect& rct, Scalar clr, Point3d &avgClr)
+{
+	line(img, rct.a, rct.b, clr,2,8,0);
+	line(img, rct.b, rct.c, clr,2,8,0);
+	line(img, rct.c, rct.d, clr,2,8,0);
+	line(img, rct.d, rct.a, clr,2,8,0);
+//	Point3d avgClr(.0, .0, .0);
+//	for(int x = rct.a.x - 1; x < rct.c.x; ++x)
+//	  for(int y = rct.a.y - 1; y < rct.c.y; ++y)
+//		  {
+//			  Point3_<uchar>* p = img.ptr<Point3_<uchar> >(y,x);
+//			  avgClr.x += p->x;//B
+//			  avgClr.y += p->y;//G
+//			  avgClr.z += p->z;//R
+//		  }
+//	avgClr *= 1.0 / ((rct.c.x - rct.a.x) * (rct.c.y - rct.a.y));
+
+	avgClr = Point3d(.0, .0, .0);
+	Point2d cnt = 0.5 * (rct.a + rct.c);
+	int w = 10;
+	for(int x = -1.0 * w; x <= w; ++x)
+	  for(int y = -1.0 * w; y <= w; ++y)
+		  {
+			  Point3_<uchar>* p = img.ptr<Point3_<uchar> >(cnt.y - 1 + y, cnt.x - 1 + x);
+			  avgClr.x += p->x;//B
+			  avgClr.y += p->y;//G
+			  avgClr.z += p->z;//R
+		  }
+	avgClr *= 1.0 / ((2 * w + 1) * (2 * w + 1));
+	line(img, cnt + Point2d(-1.0 * w, -1.0 * w), cnt + Point2d(-1.0 * w, w), clr,2,8,0);
+	line(img, cnt + Point2d(-1.0 * w, w), cnt + Point2d(w, w), clr,2,8,0);
+	line(img, cnt + Point2d(w, w), cnt + Point2d(w, -1.0 * w), clr,2,8,0);
+	line(img, cnt + Point2d(w, -1.0 * w), cnt + Point2d(-1.0 * w, -1.0 * w), clr,2,8,0);
+
+
+//	cout << int(avgClr.x) << " " << int(avgClr.y)  << " " << int(avgClr.z) << endl;
+
+//	int fontFace = 0;
+//	double fontScale = 1;
+//	int thickness = 2;
+//
+//	ostringstream convertClrB;
+//	convertClrB << int(avgClr.x);
+//	string B = convertClrB.str();
+//
+//	ostringstream convertClrG;
+//	convertClrG << int(avgClr.y);
+//	string G = convertClrG.str();
+//
+//	ostringstream convertClrR;
+//	convertClrR << int(avgClr.z);
+//	string R = convertClrR.str();
+//
+//	string RGB = "(" + R + "," + G + "," + B + ")";
+//
+//	putText(img, RGB, rct.b, fontFace, fontScale, CV_RGB(0, 0, 255), thickness,8);
+
+}
+
+void getOffensePlayers(vector<Point2d> &playersLocSet, vector<Point2d> &pLocSetFld,
+		play* p, vector<struct rect> &players, direction offDir)
+{
+	int fontFace = 0;
+	double fontScale = 1;
+	int thickness = 2;
+
+	vector<Point2d> pInsideFldSet, pInsideFldSetFld;
+	vector<struct rect> playersInsideFld;
+	for(unsigned int i = 0; i< pLocSetFld.size(); ++i)
+	{
+		if(p->fld->isPointInsideFld(pLocSetFld[i]))
+		{
+			pInsideFldSet.push_back(playersLocSet[i]);
+			pInsideFldSetFld.push_back(pLocSetFld[i]);
+			playersInsideFld.push_back(players[i]);
+
+		}
+	}
+	Mat samples(playersInsideFld.size(), 3, CV_32F);
+	for(unsigned int i = 0; i < playersInsideFld.size(); ++i)
+	{
+//		plotRect(mosFrame, players[i], Scalar(0, 0, 255));
+		Point3d avgClr;
+		plotRectAvgClr(p->mosFrame, playersInsideFld[i], Scalar(0, 0, 255), avgClr);
+		samples.at<float>(i, 0) = avgClr.x;
+		samples.at<float>(i, 1) = avgClr.y;
+		samples.at<float>(i, 2) = avgClr.z;
+	}
+
+	int K = 2;
+	Mat labels;
+	int attempts = 5;
+	Mat centers;
+	kmeans(samples, K, labels, TermCriteria(CV_TERMCRIT_ITER|CV_TERMCRIT_EPS, 10000, 0.0001), attempts, KMEANS_PP_CENTERS, centers );
+
+	int num1 = 0, num2 = 0;
+	for(unsigned int i = 0; i < pInsideFldSetFld.size(); ++i)
+	{
+		if((offDir == leftDir && pInsideFldSetFld[i].x < p->rectLosCnt.x) ||
+				(offDir == rightDir && pInsideFldSetFld[i].x > p->rectLosCnt.x))
+		{
+			if(labels.at<int>(i, 0) == 0)
+				++num1;
+			else if(labels.at<int>(i, 0) == 1)
+				++num2;
+		}
+	}
+
+	int offLabel;
+	if(num1 > num2)
+		offLabel = 0;
+	else if(num1 < num2)
+		offLabel = 1;
+	else
+	{
+		cout << "Can not decide the color of offense players." << endl;
+		return;
+	}
+
+	vector<Point2d> pOffSet, pOffSetFld;
+	vector<struct rect> playersOff;
+
+	for(unsigned int i = 0; i < pInsideFldSetFld.size(); ++i)
+	{
+		ostringstream convertScore;
+		convertScore << labels.at<int>(i, 0);
+		string scoreStr = convertScore.str();
+		putText(p->mosFrame, scoreStr, playersInsideFld[i].a, fontFace, fontScale, CV_RGB(0, 0, 255), thickness,8);
+
+		if(labels.at<int>(i, 0) == offLabel)
+		{
+			//get rid of the players which are on the defense side and far away(5 yard) from the LOS
+			if((offDir == leftDir && pInsideFldSetFld[i].x < (p->rectLosCnt.x + 5 * 3 * 5)) ||
+					(offDir == rightDir && pInsideFldSetFld[i].x > (p->rectLosCnt.x - 5 * 3 * 5)))
+			{
+				pOffSet.push_back(pInsideFldSet[i]);
+				pOffSetFld.push_back(pInsideFldSetFld[i]);
+				playersOff.push_back(playersInsideFld[i]);
+			}
+		}
+	}
+
+	playersLocSet = pOffSet;
+	pLocSetFld = pOffSetFld;
+	players = playersOff;
+
+	for(unsigned int i = 0; i < players.size(); ++i)
+		plotRect(p->mosFrame, players[i], Scalar(255, 0, 0));
+
+}
+
+

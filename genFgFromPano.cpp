@@ -34,8 +34,8 @@ void genFg()
 				//p.genOrigMosFrmFgBgSub();
 				//p.getBgImg();
 				//p.cutAreaOutsideFld();
-				//p.drawPlayerBndBoxes();
-				p.drawPlayerBndBoxesRectFld();
+				p.drawPlayerBndBoxes();
+				//p.drawPlayerBndBoxesRectFld();
 			}
 
 		}

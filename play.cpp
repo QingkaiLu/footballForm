@@ -1308,7 +1308,7 @@ void play::extOdGridsFeatFldCrdOrigImg(direction dir, vector<int> &featureVec,
 	losBndBox.b = dstLosVec[1];
 	losBndBox.c = dstLosVec[2];
 	losBndBox.d = dstLosVec[3];
-	losCnt = dstLosVec[4] ;
+	losCnt = dstLosVec[4];
 
 	imgRectfication imgRect(fldModType);
 	imgRect.getFieldYardLines(yardLnsFldModel);
@@ -2124,6 +2124,25 @@ void play::cutAreaOutsideFld()
 
 void play::drawPlayerBndBoxes()
 {
+	Mat orgToFldHMat;
+	rectification(orgToFldHMat);
+	Mat fldToOrgHMat;
+	getOverheadFieldHomo(fldToOrgHMat);
+	vector<Point2d> srcLosVec, dstLosVec;
+	srcLosVec.push_back(rectLosBndBox.a);
+	srcLosVec.push_back(rectLosBndBox.b);
+	srcLosVec.push_back(rectLosBndBox.c);
+	srcLosVec.push_back(rectLosBndBox.d);
+	srcLosVec.push_back(rectLosCnt);
+	perspectiveTransform(srcLosVec, dstLosVec, fldToOrgHMat);
+	losBndBox.a = dstLosVec[0];
+	losBndBox.b = dstLosVec[1];
+	losBndBox.c = dstLosVec[2];
+	losBndBox.d = dstLosVec[3];
+	losCnt = dstLosVec[4];
+	plotRect(mosFrame, losBndBox, Scalar(255, 0, 0));
+
+
 	string playersFilePath = "playerBndBoxes/Game" + gameIdStr + "/" + gameIdStr +"0" + vidIdxStr + ".players";
 	ifstream fin(playersFilePath.c_str());
 
@@ -2164,10 +2183,16 @@ void play::drawPlayerBndBoxes()
 	int fontFace = 0;
 	double fontScale = 1;
 	int thickness = 2;
-
+	Mat samples(players.size(), 3, CV_32F);
 	for(unsigned int i = 0; i < players.size(); ++i)
 	{
-		plotRect(mosFrame, players[i], Scalar(0, 0, 255));
+//		plotRect(mosFrame, players[i], Scalar(0, 0, 255));
+		Point3d avgClr;
+		plotRectAvgClr(mosFrame, players[i], Scalar(0, 0, 255), avgClr);
+		samples.at<float>(i, 0) = avgClr.x;
+		samples.at<float>(i, 1) = avgClr.y;
+		samples.at<float>(i, 2) = avgClr.z;
+
 		//string scoreStr = to_string(scores[i]);
 //		double score = double(int(scores[i] * 100)) / 100.0;
 //		ostringstream convertScore;
@@ -2181,8 +2206,22 @@ void play::drawPlayerBndBoxes()
 //		string areaStr = convertArea.str();
 //		putText(mosFrame, areaStr, players[i].a, fontFace, fontScale, CV_RGB(255, 255, 0), thickness,8);
 	}
-
 	fin.close();
+
+	int K = 2;
+	Mat labels;
+	int attempts = 5;
+	Mat centers;
+	kmeans(samples, K, labels, TermCriteria(CV_TERMCRIT_ITER|CV_TERMCRIT_EPS, 10000, 0.0001), attempts, KMEANS_PP_CENTERS, centers );
+
+	for(unsigned int i = 0; i < players.size(); ++i)
+	{
+		ostringstream convertScore;
+		convertScore << labels.at<int>(i, 0);
+		string scoreStr = convertScore.str();
+		putText(mosFrame, scoreStr, players[i].a, fontFace, fontScale, CV_RGB(0, 0, 255), thickness,8);
+
+	}
 
 	string playersImagePath = "Results/Game" + gameIdStr + "/playersPlots/" + gameIdStr +"0" + vidIdxStr + ".jpg";
 	imwrite(playersImagePath, mosFrame);
@@ -2297,27 +2336,35 @@ void play::detectForms(direction offSide)
 	vector<Point2d> playersLocSet, pLocSetFld, offensePLocSetFld;
 	for(unsigned int i = 0; i < players.size(); ++i)
 	{
-		Point2d p = Point2d(0.5 * (players[i].a.x + players[i].c.x),
-				0.5 * (players[i].a.y + players[i].c.y) );
+//		Point2d p = Point2d(0.5 * (players[i].a.x + players[i].c.x),
+//				0.5 * (players[i].a.y + players[i].c.y) );
+		Point2d p = Point2d(0.5 * (players[i].b.x + players[i].c.x),
+				0.5 * (players[i].b.y + players[i].c.y) );
 		playersLocSet.push_back(p);
+		plotRect(mosFrame, players[i], Scalar(0, 0, 255));
 	}
 	perspectiveTransform(playersLocSet, pLocSetFld, orgToFldHMat);
 
-	vector<double> offenseScores;
-	for(unsigned int i = 0; i < pLocSetFld.size(); ++i)
-	{
-		bool offense = false;
-		if(offSide == leftDir && pLocSetFld[i].x <= rectLosCnt.x)
-			offense = true;
-		else if(offSide == rightDir && pLocSetFld[i].x >= rectLosCnt.x)
-			offense = true;
+	getOffensePlayers(playersLocSet, pLocSetFld, this, players, offSide);
 
-		if(offense && fld->isPointInsideFld(pLocSetFld[i]))
-		{
-			offensePLocSetFld.push_back(pLocSetFld[i]);
-			offenseScores.push_back(scores[i]);
-		}
-	}
+//	for(unsigned int i = 0; i < players.size(); ++i)
+//		plotRect(mosFrame, players[i], Scalar(255, 0, 0));
+
+//	vector<double> offenseScores;
+//	for(unsigned int i = 0; i < pLocSetFld.size(); ++i)
+//	{
+//		bool offense = false;
+//		if(offSide == leftDir && pLocSetFld[i].x <= rectLosCnt.x)
+//			offense = true;
+//		else if(offSide == rightDir && pLocSetFld[i].x >= rectLosCnt.x)
+//			offense = true;
+//
+//		if(offense && fld->isPointInsideFld(pLocSetFld[i]))
+//		{
+//			offensePLocSetFld.push_back(pLocSetFld[i]);
+//			offenseScores.push_back(scores[i]);
+//		}
+//	}
 //	cout << "pLocSetFld " << pLocSetFld.size() << endl;
 //	cout << "offensePLocSetFld " << offensePLocSetFld.size() << endl;
 //	cout << "offenseScores " << offenseScores.size() << endl;
@@ -2357,6 +2404,8 @@ void play::detectForms(direction offSide)
 	cout << bestForm->formName << bestForm->formBestScore << endl;
 
 	bestForm->plotFormOrigImg(mosFrame, fldToOrgHMat);
-	drawPlayerBndBoxes();
+//	drawPlayerBndBoxes();
+	string playersImagePath = "Results/Game" + gameIdStr + "/playersPlots/" + gameIdStr +"0" + vidIdxStr + ".jpg";
+	imwrite(playersImagePath, mosFrame);
 
 }
