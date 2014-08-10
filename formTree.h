@@ -29,11 +29,24 @@ public:
 	void setupPartsLocSetStarModel(const cv::Point2d &rectLosCnt,
 			const std::vector<cv::Point2d> &pLocSetFld, const std::vector<double> &score);
 	void findBestFormStarModel();
+	void setupPartsLocSetHungarian(const cv::Point2d &rectLosCnt,
+			const std::vector<cv::Point2d> &pLocSetFld);
+	void getScoreMat(std::string outputFile);
+	void findBestFormHungarian(std::string outputFile);
 	void plotFormOrigImg(cv::Mat &img, const cv::Mat &fldToOrgHMat);
 public:
 	std::vector<part> parts;
 	std::string formName;
 	double formBestScore;
+	std::vector<cv::Point2d> partsLocSet;
 };
+
+void makeScoreMatSquare(std::vector<std::vector<double> > &scoreMat, double minScore);
+
+void printMat(const std::vector<std::vector<double> > &scoreMat);
+
+void printMat(const std::vector<std::vector<double> > &scoreMat, std::string outputPath);
+
+void readMat(int n, std::string filePath, std::vector<std::vector<double> > &m);
 
 #endif

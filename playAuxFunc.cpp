@@ -732,6 +732,7 @@ void getOffensePlayers(vector<Point2d> &playersLocSet, vector<Point2d> &pLocSetF
 		offLabel = 1;
 	else
 	{
+//		offLabel = 0;
 		cout << "Can not decide the color of offense players." << endl;
 		return;
 	}

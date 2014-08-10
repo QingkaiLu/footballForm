@@ -68,6 +68,7 @@ void formTree::setupFormTree(const string &formFile)
 							parts[i].children.push_back(&parts[j]);
 							parts[j].parent = &parts[i];
 							parts[j].relLocToPar = edge;
+//							parts[j].relLocToPar = 2 * edge;
 //							cout << parts[j].partName << " " << parts[j].relLocToPar.x
 //									<< " " << parts[j].relLocToPar.y << endl;
 						}
@@ -136,6 +137,99 @@ void formTree::findBestFormStarModel()
 	cout << formName << " " << formBestScore << endl;
 }
 
+void formTree::setupPartsLocSetHungarian(const Point2d &rectLosCnt,
+		const vector<Point2d> &pLocSetFld)
+{
+	for(unsigned int i = 0; i < parts.size(); ++i)
+	{
+		if(parts[i].partName.compare("OL") == 0)
+		{
+			parts[i].location = rectLosCnt;
+			parts[i].appScore = .0;
+			break;
+		}
+	}
+	partsLocSet = pLocSetFld;
+
+}
+
+void formTree::getScoreMat(string outputFile)
+{
+	if(parts[0].partName.compare("OL") != 0)
+	{
+		cout << "1st part is not OL. " << endl;
+		return;
+	}
+
+	vector<vector<double> > scoreMat;
+
+	double minScore = INF;
+	for(unsigned int i = 1; i < parts.size(); ++i)
+	{
+		vector<double> partScores;
+		for(unsigned int j = 0; j < partsLocSet.size(); ++j)
+		{
+			Point2d vecFromPar = partsLocSet[j] - parts[0].location;
+			//convert from pixel distance to feet(/5), then to yard(/3)
+			vecFromPar *= 1.0 / 15.0;
+			double spScore = -1.0 * norm(vecFromPar - parts[i].relLocToPar);
+			partScores.push_back(spScore);
+			if(spScore < minScore)
+				minScore = spScore;
+		}
+		scoreMat.push_back(partScores);
+	}
+//	printScoreMat(scoreMat);
+//	cout << endl;
+	makeScoreMatSquare(scoreMat, minScore);
+	outputFile = outputFile + ".scoreMat";
+	printMat(scoreMat, outputFile);
+//	cout << endl;
+
+}
+void formTree::findBestFormHungarian(string outputFile)
+{
+	if(parts[0].partName.compare("OL") != 0)
+	{
+		cout << "OL is not root of tree. " << endl;
+		return;
+	}
+//	outputFile = outputFile + ".match";
+	int matSize = max(parts.size(), partsLocSet.size());
+	vector<vector<double> > matchMat;
+	readMat(matSize, outputFile + ".match", matchMat);
+	printMat(matchMat);
+	cout << endl;
+	vector<vector<double> > scoreMat;
+	readMat(matSize, outputFile + ".scoreMat", scoreMat);
+	printMat(scoreMat);
+	cout << endl;
+
+
+	for(unsigned int i = 1; i < parts.size(); ++i)
+	{
+		for(unsigned int j = 0; j < matchMat[i - 1].size(); ++j)
+		{
+			if(matchMat[i - 1][j] == 1)
+			{
+				parts[i].score = scoreMat[i - 1][j];
+				if(j < partsLocSet.size())
+					parts[i].location = partsLocSet[j];
+				else
+				{
+					cout << "no location for this player. " << endl;
+					parts[i].location = Point2d(0, 0);
+				}
+			}
+		}
+
+		formBestScore += parts[i].score;
+	}
+	cout << formName << " " << formBestScore << endl;
+
+
+}
+
 void formTree::plotFormOrigImg(Mat &img, const Mat &fldToOrgHMat)
 {
 	vector<Point2d> partsLoc, partsLocOrig;
@@ -180,5 +274,85 @@ void formTree::plotFormOrigImg(Mat &img, const Mat &fldToOrgHMat)
 	convertScore << score;
 	string scoreStr = convertScore.str();
 	putText(img, scoreStr, Point2d(10, 55), fontFace, fontScale, CV_RGB(0, 0, 255), thickness,8);
+
+}
+
+void makeScoreMatSquare(vector<vector<double> > &scoreMat, double minScore)
+{
+	minScore -= 1;
+	if(scoreMat.empty() || scoreMat[0].empty())
+	{
+		cout << "Empty score matrix." << endl;
+		return;
+	}
+
+	int sizeDif = scoreMat[0].size() - scoreMat.size();
+	if(sizeDif == 0)
+		return;
+	if(sizeDif > 0)
+	{
+		 vector<double> virtualVec(scoreMat[0].size(), minScore);
+		 scoreMat.insert(scoreMat.end(), sizeDif, virtualVec);
+	}
+	else if(sizeDif < 0)
+	{
+		sizeDif *= -1;
+		for(unsigned int i = 0; i < scoreMat.size(); ++i)
+			scoreMat[i].insert(scoreMat[i].end(), sizeDif, minScore);
+	}
+}
+
+void printMat(const std::vector<std::vector<double> > &scoreMat)
+{
+	for(unsigned int i = 0; i < scoreMat.size(); ++i)
+	{
+		for(unsigned int j = 0; j < scoreMat[i].size(); ++j)
+			cout << scoreMat[i][j] << " ";
+		cout << endl;
+	}
+
+}
+
+void printMat(const std::vector<std::vector<double> > &scoreMat, std::string outputPath)
+{
+	ofstream fout(outputPath.c_str());
+	for(unsigned int i = 0; i < scoreMat.size(); ++i)
+	{
+		for(unsigned int j = 0; j < scoreMat[i].size(); ++j)
+			fout << scoreMat[i][j] << " ";
+		fout << endl;
+	}
+	fout.close();
+}
+
+void readMat(int n, string filePath, std::vector<std::vector<double> > &m)
+{
+	ifstream fin(filePath.c_str());
+
+	if(!fin.is_open())
+	{
+		cout << "Can't open file " << filePath << endl;
+		return;
+	}
+
+	fin.seekg(0, ios::end);
+	if (fin.tellg() == 0) {
+		cout << "Empty file " << filePath << endl;
+		return;
+	}
+	fin.seekg(0, ios::beg);
+
+	for(int i = 0; i < n; ++i)
+	{
+		vector<double> v;
+		for(int j = 0; j < n; ++j)
+		{
+			double t;
+			fin >> t;
+			v.push_back(t);
+		}
+		m.push_back(v);
+	}
+	fin.close();
 
 }

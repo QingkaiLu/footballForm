@@ -2323,6 +2323,20 @@ void play::detectForms(direction offSide)
 	Mat fldToOrgHMat;
 	getOverheadFieldHomo(fldToOrgHMat);
 
+	vector<Point2d> srcLosVec, dstLosVec;
+	srcLosVec.push_back(rectLosBndBox.a);
+	srcLosVec.push_back(rectLosBndBox.b);
+	srcLosVec.push_back(rectLosBndBox.c);
+	srcLosVec.push_back(rectLosBndBox.d);
+	srcLosVec.push_back(rectLosCnt);
+	perspectiveTransform(srcLosVec, dstLosVec, fldToOrgHMat);
+	losBndBox.a = dstLosVec[0];
+	losBndBox.b = dstLosVec[1];
+	losBndBox.c = dstLosVec[2];
+	losBndBox.d = dstLosVec[3];
+	losCnt = dstLosVec[4];
+	plotRect(mosFrame, losBndBox, Scalar(255, 0, 0));
+
 	string formsFile = "formModel/formations";
 	vector<string> formations;
 	readFormsFile(formsFile, offSide, formations);
@@ -2347,56 +2361,28 @@ void play::detectForms(direction offSide)
 
 	getOffensePlayers(playersLocSet, pLocSetFld, this, players, offSide);
 
-//	for(unsigned int i = 0; i < players.size(); ++i)
-//		plotRect(mosFrame, players[i], Scalar(255, 0, 0));
-
-//	vector<double> offenseScores;
-//	for(unsigned int i = 0; i < pLocSetFld.size(); ++i)
-//	{
-//		bool offense = false;
-//		if(offSide == leftDir && pLocSetFld[i].x <= rectLosCnt.x)
-//			offense = true;
-//		else if(offSide == rightDir && pLocSetFld[i].x >= rectLosCnt.x)
-//			offense = true;
-//
-//		if(offense && fld->isPointInsideFld(pLocSetFld[i]))
-//		{
-//			offensePLocSetFld.push_back(pLocSetFld[i]);
-//			offenseScores.push_back(scores[i]);
-//		}
-//	}
-//	cout << "pLocSetFld " << pLocSetFld.size() << endl;
-//	cout << "offensePLocSetFld " << offensePLocSetFld.size() << endl;
-//	cout << "offenseScores " << offenseScores.size() << endl;
 	double bestFormScore = NEGINF;
 	formTree* bestForm;
-//	for(unsigned int i = 0; i < formations.size(); ++i)
-//	{
-//		formTree fTree(formations[i]);
-//		fTree.setupPartsLocSetStarModel(rectLosCnt, offensePLocSetFld, offenseScores);
-//		fTree.findBestFormStarModel();
-//		if(fTree.formBestScore >= bestFormScore)
-//		{
-//			bestFormScore = fTree.formBestScore;
-//			bestForm = &fTree;
-////			bestForm->plotFormOrigImg(mosFrame, fldToOrgHMat);
-////			drawPlayerBndBoxes();
-//		}
-//	}
 	vector<formTree*> fTrees;
 	for(unsigned int i = 0; i < formations.size(); ++i)
 	{
 		formTree* f = new formTree(formations[i]);
-//		f->setupPartsLocSetStarModel(rectLosCnt, offensePLocSetFld, offenseScores);
-		f->setupPartsLocSetStarModel(rectLosCnt, pLocSetFld, scores);
-		f->findBestFormStarModel();
+//		f->setupPartsLocSetStarModel(rectLosCnt, pLocSetFld, scores);
+//		f->findBestFormStarModel();
+
+		f->setupPartsLocSetHungarian(rectLosCnt, pLocSetFld);
+		string vidFormId = "Hungarian/Game" + gameIdStr + "/vid" + vidIdxStr + "F";
+		ostringstream convertVidForm;
+		convertVidForm << i;
+		vidFormId = vidFormId + convertVidForm.str();
+		cout << vidFormId << endl;
+//		f->getScoreMat(vidFormId);
+		f->findBestFormHungarian(vidFormId);
 		if(f->formBestScore >= bestFormScore)
 		{
 			bestFormScore = f->formBestScore;
 			bestForm = f;
 			fTrees.push_back(f);
-//			bestForm->plotFormOrigImg(mosFrame, fldToOrgHMat);
-//			drawPlayerBndBoxes();
 		}
 	}
 
@@ -2404,7 +2390,6 @@ void play::detectForms(direction offSide)
 	cout << bestForm->formName << bestForm->formBestScore << endl;
 
 	bestForm->plotFormOrigImg(mosFrame, fldToOrgHMat);
-//	drawPlayerBndBoxes();
 	string playersImagePath = "Results/Game" + gameIdStr + "/playersPlots/" + gameIdStr +"0" + vidIdxStr + ".jpg";
 	imwrite(playersImagePath, mosFrame);
 
