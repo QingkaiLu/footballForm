@@ -1,6 +1,7 @@
 #ifndef _FORM_TREE_H_
 #define _FORM_TREE_H_
 #include <cv.h>
+#include "commonStructs.h"
 
 struct part
 {
@@ -22,6 +23,9 @@ class formTree{
 public:
 	formTree(std::string formFile);
 	void setupFormTree(const std::string &formFile);
+
+	formTree(std::string formFile, direction offSide);
+	void setupFormTree(const std::string &formFile, direction offSide);
 //	void setOLAsRoot();
 //	void sortParts();
 //	void setupAllPartsLocSet(std::vector<std::vector<cv::Point2d> >);

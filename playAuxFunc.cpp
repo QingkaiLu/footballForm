@@ -574,6 +574,35 @@ void readFormsFile(const string &formsFile, direction offSide, vector<string> &f
 	fin.close();
 }
 
+void readFormsFile(const string &formsFile, vector<string> &formations)
+{
+	ifstream fin(formsFile.c_str());
+
+	if(!fin.is_open())
+	{
+		cout << "Can't open file " << formsFile << endl;
+		return;
+	}
+
+	fin.seekg(0, ios::end);
+	if (fin.tellg() == 0) {
+		cout << "Empty file " << formsFile << endl;
+		return;
+	}
+	fin.seekg(0, ios::beg);
+	while(!fin.eof())
+	{
+		string form;
+		fin >> form;
+		if(form.empty())
+			break;
+		formations.push_back(form);
+//		cout << form << endl;
+	}
+	fin.close();
+}
+
+
 void readPlayerBndBoxes(const string &playersFilePath, 	vector<double> &scores,
 		vector<struct rect> &players, vector<double> &areas)
 {

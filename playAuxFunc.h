@@ -70,6 +70,8 @@ vector<Mat> readHomographs(const string &fileName);
 
 void readFormsFile(const string &formsFile, direction offSide, vector<string> &formations);
 
+void readFormsFile(const string &formsFile, vector<string> &formations);
+
 void readPlayerBndBoxes(const string &playersFilePath, 	vector<double> &scores,
 		vector<struct rect> &players, vector<double> &areas);
 

@@ -76,6 +76,8 @@ void detectForm(const vector<int> &games, const vector<int> &gamesFld)
 
 		for(unsigned int i = 0; i < pIds.size(); ++i)
 		{
+//			if(pIds[i].vidId != 13)
+//				continue;
 			play *p = NULL;
 			cout << "gameId: " << pIds[i].gameId << " vidId: " << pIds[i].vidId << endl;
 			if (p != NULL)

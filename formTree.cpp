@@ -3,7 +3,6 @@
 #include <fstream>
 
 #include "formTree.h"
-#include "commonStructs.h"
 
 using namespace std;
 using namespace cv;
@@ -67,8 +66,8 @@ void formTree::setupFormTree(const string &formFile)
 						{
 							parts[i].children.push_back(&parts[j]);
 							parts[j].parent = &parts[i];
+//							parts[j].relLocToPar = edge;
 							parts[j].relLocToPar = edge;
-//							parts[j].relLocToPar = 2 * edge;
 //							cout << parts[j].partName << " " << parts[j].relLocToPar.x
 //									<< " " << parts[j].relLocToPar.y << endl;
 						}
@@ -83,6 +82,100 @@ void formTree::setupFormTree(const string &formFile)
 //	}
 	fin.close();
 }
+
+formTree::formTree(string formFile, direction offSide)
+{
+	string dir;
+	if(offSide == leftDir)
+		dir = "Left";
+	else if(offSide == rightDir)
+		dir = "Right";
+	else
+	{
+		cout << "Wrong direction in detectForms()." << endl;
+		return;
+	}
+	formName = formFile + dir;
+	formBestScore = .0;
+	string formFilePath = "formModel/" + formFile + "Right.form";
+	setupFormTree(formFilePath, offSide);
+}
+
+void formTree::setupFormTree(const string &formFile, direction offSide)
+{
+	ifstream fin(formFile.c_str());
+
+	if(!fin.is_open())
+	{
+		cout << "Can't open file " << formFile << endl;
+		return;
+	}
+
+	fin.seekg(0, ios::end);
+	if (fin.tellg() == 0) {
+		cout << "Empty file " << formFile << endl;
+		return;
+	}
+	fin.seekg(0, ios::beg);
+	string tmp;
+	fin >> tmp;
+	if(tmp == "parts:")
+	{
+		while(1)
+		{
+			fin >> tmp;
+//			cout << tmp << endl;
+			if(tmp.compare("edges:") == 0)
+				break;
+			struct part p;
+			p.partName = tmp;
+			parts.push_back(p);
+		}
+	}
+
+	if(tmp.compare("edges:") == 0)
+	{
+		while(!fin.eof())
+		{
+			string parent, child;
+			Point2d edge;
+			fin >> tmp >> parent >> child >> edge.x >> edge.y >> tmp;
+//			cout << tmp << parent << " " << child << " "<< edge.x << " "<< edge.y << " "<< endl;
+			if(tmp.empty())
+				break;
+			for(unsigned int i = 0; i < parts.size(); ++i)
+			{
+				if(parts[i].partName.compare(parent) == 0)
+				{
+					for(unsigned int j = 0; j < parts.size(); ++j)
+						if(parts[j].partName.compare(child) == 0)
+						{
+							parts[i].children.push_back(&parts[j]);
+							parts[j].parent = &parts[i];
+//							parts[j].relLocToPar = edge;
+							if(offSide == rightDir)
+								parts[j].relLocToPar = edge;
+							else if(offSide == leftDir)
+							{
+								edge.x *= -1.0;
+								parts[j].relLocToPar = edge;
+							}
+//							cout << parts[j].partName << " " << parts[j].relLocToPar.x
+//									<< " " << parts[j].relLocToPar.y << endl;
+						}
+				}
+			}
+		}
+	}
+//	while(!fin.eof())
+//	{
+//		if(tmp.empty())
+//			break;
+//	}
+	fin.close();
+}
+
+
 
 void formTree::setupPartsLocSetStarModel(const Point2d &rectLosCnt,
 		const vector<Point2d> &pLocSetFld, const vector<double> &score)
@@ -195,7 +288,7 @@ void formTree::findBestFormHungarian(string outputFile)
 		return;
 	}
 //	outputFile = outputFile + ".match";
-	int matSize = max(parts.size(), partsLocSet.size());
+	int matSize = max(parts.size() - 1, partsLocSet.size());
 	vector<vector<double> > matchMat;
 	readMat(matSize, outputFile + ".match", matchMat);
 	printMat(matchMat);
@@ -349,8 +442,10 @@ void readMat(int n, string filePath, std::vector<std::vector<double> > &m)
 		{
 			double t;
 			fin >> t;
+//			cout << t << " ";
 			v.push_back(t);
 		}
+//		cout << endl;
 		m.push_back(v);
 	}
 	fin.close();
