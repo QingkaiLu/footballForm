@@ -101,6 +101,10 @@ void detectForm(const vector<int> &games, const vector<int> &gamesFld)
 int main()
 //int detectFormMain()
 {
+//    if(system("touch hi.txt")) cout<<"not done";
+//    if(system("cd ../hungarian")) cout<<"not done";
+//    if(system("./../hungarian/hungarian -v 0 -i scoreMat2")) cout<<"not done";
+//	if(system("./../hungarian/hungarian -v 0 -i Hungarian/score.mat")) cout << " not done";
 	vector<int> games;
 	vector<int> gamesFld;
 	games.push_back(2);

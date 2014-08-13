@@ -2362,36 +2362,42 @@ void play::detectForms(direction offSide)
 
 	getOffensePlayers(playersLocSet, pLocSetFld, this, players, offSide);
 
-//	double bestFormScore = NEGINF;
-//	formTree* bestForm;
-//	vector<formTree*> fTrees;
-//	for(unsigned int i = 0; i < formations.size(); ++i)
-//	{
-////		formTree* f = new formTree(formations[i]);
-//		formTree* f = new formTree(formations[i], offSide);
+	double bestFormScore = NEGINF;
+	formTree* bestForm;
+	vector<formTree*> fTrees;
+	for(unsigned int i = 0; i < formations.size(); ++i)
+	{
+//		formTree* f = new formTree(formations[i]);
+		formTree* f = new formTree(formations[i], offSide);
 //		f->setupPartsLocSetStarModel(rectLosCnt, pLocSetFld, scores);
 //		f->findBestFormStarModel();
-//
-////		f->setupPartsLocSetHungarian(rectLosCnt, pLocSetFld);
-////		string vidFormId = "Hungarian/Game" + gameIdStr + "/vid" + vidIdxStr + "F";
-////		ostringstream convertVidForm;
-////		convertVidForm << i;
-////		vidFormId = vidFormId + convertVidForm.str();
-////		cout << vidFormId << endl;
-//////		f->getScoreMat(vidFormId);
-////		f->findBestFormHungarian(vidFormId);
-//		if(f->formBestScore >= bestFormScore)
-//		{
-//			bestFormScore = f->formBestScore;
-//			bestForm = f;
-//			fTrees.push_back(f);
-//		}
-//	}
-//
-//
-//	cout << bestForm->formName << bestForm->formBestScore << endl;
-//
-//	bestForm->plotFormOrigImg(mosFrame, fldToOrgHMat);
+
+//		f->setupPartsLocSetHungarian(rectLosCnt, pLocSetFld);
+//		string vidFormId = "Hungarian/Game" + gameIdStr + "/vid" + vidIdxStr + "F";
+//		ostringstream convertVidForm;
+//		convertVidForm << i;
+//		vidFormId = vidFormId + convertVidForm.str();
+//		cout << vidFormId << endl;
+////		f->getScoreMat(vidFormId);
+//		f->findBestFormHungarian(vidFormId);
+
+		vector<Point2d> olLocSet;
+		getRectLosPnts(rectLosBndBox, olLocSet);
+//		olLocSet.push_back(rectLosCnt);
+		f->setupPartsLocSetHungarian(olLocSet, pLocSetFld);
+		f->findBestFormHungarian();
+		if(f->formBestScore >= bestFormScore)
+		{
+			bestFormScore = f->formBestScore;
+			bestForm = f;
+			fTrees.push_back(f);
+		}
+	}
+
+
+	cout << bestForm->formName << bestForm->formBestScore << endl;
+
+	bestForm->plotFormOrigImg(mosFrame, fldToOrgHMat);
 	string playersImagePath = "Results/Game" + gameIdStr + "/playersPlots/" + gameIdStr +"0" + vidIdxStr + ".jpg";
 	imwrite(playersImagePath, mosFrame);
 

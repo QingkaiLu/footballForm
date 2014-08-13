@@ -798,4 +798,16 @@ void getOffensePlayers(vector<Point2d> &playersLocSet, vector<Point2d> &pLocSetF
 
 }
 
+void getRectLosPnts(const struct rect &rectLosBndBox, std::vector<cv::Point2d> &olLocSet)
+{
+	int xMin = rectLosBndBox.a.x;
+	int xMax = rectLosBndBox.c.x;
+	int yMin = rectLosBndBox.a.y;
+	int yMax = rectLosBndBox.c.y;
+	int step = 5;
+	for(unsigned int x = xMin; x <= xMax; x += step)
+		for(unsigned int y = yMin; y <= yMax; y += step)
+			olLocSet.push_back(Point2d(x, y));
+}
+
 

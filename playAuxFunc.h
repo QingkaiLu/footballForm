@@ -80,4 +80,6 @@ void plotRectAvgClr(Mat& img, const struct rect& rct, Scalar clr, Point3d &avgCl
 void getOffensePlayers(vector<Point2d> &playersLocSet, vector<Point2d> &pLocSetFld,
 		play* p, vector<struct rect> &players, direction offDir);
 
+void getRectLosPnts(const struct rect &rectLosBndBox, std::vector<cv::Point2d> &olLocSet);
+
 #endif

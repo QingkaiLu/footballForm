@@ -2,7 +2,10 @@
 #include <vector>
 #include <fstream>
 
+#include <assert.h>
+
 #include "formTree.h"
+//#include "hungarian.h"
 
 using namespace std;
 using namespace cv;
@@ -246,6 +249,21 @@ void formTree::setupPartsLocSetHungarian(const Point2d &rectLosCnt,
 
 }
 
+void formTree::setupPartsLocSetHungarian(const std::vector<cv::Point2d> &olLocSet,
+		const std::vector<cv::Point2d> &pLocSetFld)
+{
+	for(unsigned int i = 0; i < parts.size(); ++i)
+	{
+		if(parts[i].partName.compare("OL") == 0)
+		{
+			parts[i].locSet = olLocSet;
+			parts[i].appScore = .0;
+			break;
+		}
+	}
+	partsLocSet = pLocSetFld;
+}
+
 void formTree::getScoreMat(string outputFile)
 {
 	if(parts[0].partName.compare("OL") != 0)
@@ -280,6 +298,40 @@ void formTree::getScoreMat(string outputFile)
 //	cout << endl;
 
 }
+
+void formTree::getScoreMat(std::string outputFile, double &minScore)
+{
+	if(parts[0].partName.compare("OL") != 0)
+	{
+		cout << "1st part is not OL. " << endl;
+		return;
+	}
+
+	vector<vector<double> > scoreMat;
+
+	minScore = INF;
+	for(unsigned int i = 1; i < parts.size(); ++i)
+	{
+		vector<double> partScores;
+		for(unsigned int j = 0; j < partsLocSet.size(); ++j)
+		{
+			Point2d vecFromPar = partsLocSet[j] - parts[0].location;
+			//convert from pixel distance to feet(/5), then to yard(/3)
+			vecFromPar *= 1.0 / 15.0;
+			double spScore = -1.0 * norm(vecFromPar - parts[i].relLocToPar);
+			partScores.push_back(spScore);
+			if(spScore < minScore)
+				minScore = spScore;
+		}
+		scoreMat.push_back(partScores);
+	}
+//	printScoreMat(scoreMat);
+//	cout << endl;
+	makeScoreMatSquare(scoreMat, minScore);
+	outputFile = outputFile + ".scoreMat";
+	printMat(scoreMat, outputFile);
+}
+
 void formTree::findBestFormHungarian(string outputFile)
 {
 	if(parts[0].partName.compare("OL") != 0)
@@ -323,6 +375,97 @@ void formTree::findBestFormHungarian(string outputFile)
 
 }
 
+
+void formTree::getScoreMat(std::vector<std::vector<double> > &scoreMat)
+{
+	if(parts[0].partName.compare("OL") != 0)
+	{
+		cout << "1st part is not OL. " << endl;
+		return;
+	}
+
+	double minScore = INF;
+	for(unsigned int i = 1; i < parts.size(); ++i)
+	{
+		vector<double> partScores;
+		for(unsigned int j = 0; j < partsLocSet.size(); ++j)
+		{
+			Point2d vecFromPar = partsLocSet[j] - parts[0].location;
+			//convert from pixel distance to feet(/5), then to yard(/3)
+			vecFromPar *= 1.0 / 15.0;
+			double spScore = -1.0 * norm(vecFromPar - parts[i].relLocToPar);
+			partScores.push_back(spScore);
+			if(spScore < minScore)
+				minScore = spScore;
+		}
+		scoreMat.push_back(partScores);
+	}
+
+	makeScoreMatSquare(scoreMat, minScore);
+
+}
+
+void formTree::findBestFormHungarian()
+{
+	if(parts[0].partName.compare("OL") != 0)
+	{
+		cout << "OL is not root of tree. " << endl;
+		return;
+	}
+
+	int matSize = max(parts.size() - 1, partsLocSet.size());
+	formBestScore = NEGINF;
+	Point2d olFinalPos;
+	for(unsigned int k = 0; k < parts[0].locSet.size(); ++k)
+	{
+		parts[0].location = parts[0].locSet[k];
+		string scoreFile = "Hungarian/tmp";
+		double minScore;
+		getScoreMat(scoreFile, minScore);
+		vector<vector<double> > scoreMat;
+		readMat(matSize, scoreFile + ".scoreMat", scoreMat);
+		if(system("./../hungarian/hungarian -v 0 -i Hungarian/tmp.scoreMat"))
+		{
+			cout << "Can not run hungarian." << endl;;
+			return;
+		}
+		vector<vector<double> > matchMat;
+		readMat(matSize, "matchResult", matchMat);
+		double score = 0;
+		readMatchScore("matchScore", score);
+		//compensate the score of virtual nodes of Hungarian
+		score -= (minScore - 1) * abs(int(parts.size() - 1 - partsLocSet.size()));
+		cout << "score: " << score << endl;
+		if(score >= formBestScore)
+		{
+			formBestScore = score;
+			olFinalPos = parts[0].location;
+			for(unsigned int i = 1; i < parts.size(); ++i)
+			{
+				for(unsigned int j = 0; j < matchMat[i - 1].size(); ++j)
+				{
+					if(matchMat[i - 1][j] == 1)
+					{
+						parts[i].score = scoreMat[i - 1][j];
+						if(j < partsLocSet.size())
+							parts[i].location = partsLocSet[j];
+						else
+						{
+							cout << "no location for this player. " << endl;
+							parts[i].location = Point2d(0, 0);
+						}
+					}
+				}
+				//formBestScore += parts[i].score;
+			}
+		}
+	}
+	parts[0].location = olFinalPos;
+	cout << formName << " " << formBestScore << endl;
+
+}
+
+
 void formTree::plotFormOrigImg(Mat &img, const Mat &fldToOrgHMat)
 {
 	vector<Point2d> partsLoc, partsLocOrig;
@@ -337,6 +480,10 @@ void formTree::plotFormOrigImg(Mat &img, const Mat &fldToOrgHMat)
 	{
 		cout << parts[i].partName << endl;
 		putText(img, parts[i].partName, partsLocOrig[i], fontFace, fontScale, CV_RGB(0, 0, 255), thickness,8);
+
+		int len = 5;
+		line(img, partsLocOrig[i] - Point2d(len, 0), partsLocOrig[i] + Point2d(len, 0), CV_RGB(0, 255, 0),2,8,0);
+		line(img, partsLocOrig[i] - Point2d(0, len), partsLocOrig[i] + Point2d(0, len), CV_RGB(0, 255, 0),2,8,0);
 
 //		double pixShiftNum = 15;
 //		double score = double(int(parts[i].score * 100)) / 100.0;
@@ -450,4 +597,24 @@ void readMat(int n, string filePath, std::vector<std::vector<double> > &m)
 	}
 	fin.close();
 
+}
+
+void readMatchScore(std::string filePath, double &score)
+{
+	ifstream fin(filePath.c_str());
+
+	if(!fin.is_open())
+	{
+		cout << "Can't open file " << filePath << endl;
+		return;
+	}
+
+	fin.seekg(0, ios::end);
+	if (fin.tellg() == 0) {
+		cout << "Empty file " << filePath << endl;
+		return;
+	}
+	fin.seekg(0, ios::beg);
+	fin >> score;
+	fin.close();
 }
