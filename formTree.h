@@ -38,6 +38,9 @@ public:
 	void setupPartsLocSetHungarian(const std::vector<cv::Point2d> &olLocSet,
 			const std::vector<cv::Point2d> &pLocSetFld);
 
+//	void setupPartsLocSetHungarian(const std::vector<cv::Point2d> &olLocSet,
+//			const std::vector<cv::Point2d> &pLocSetFld, const std::vector<double> &scores);
+
 	void getScoreMat(std::string outputFile);
 	void getScoreMat(std::string outputFile, double &minScore);
 	void findBestFormHungarian(std::string outputFile);

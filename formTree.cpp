@@ -264,6 +264,22 @@ void formTree::setupPartsLocSetHungarian(const std::vector<cv::Point2d> &olLocSe
 	partsLocSet = pLocSetFld;
 }
 
+//void formTree::setupPartsLocSetHungarian(const std::vector<cv::Point2d> &olLocSet,
+//		const std::vector<cv::Point2d> &pLocSetFld, const std::vector<double> &scores)
+//{
+//	for(unsigned int i = 0; i < parts.size(); ++i)
+//	{
+//		if(parts[i].partName.compare("OL") == 0)
+//		{
+//			parts[i].locSet = olLocSet;
+//			parts[i].appScore = scores[i];
+//			break;
+//		}
+//	}
+//	partsLocSet = pLocSetFld;
+//}
+
+
 void formTree::getScoreMat(string outputFile)
 {
 	if(parts[0].partName.compare("OL") != 0)
@@ -318,10 +334,16 @@ void formTree::getScoreMat(std::string outputFile, double &minScore)
 			Point2d vecFromPar = partsLocSet[j] - parts[0].location;
 			//convert from pixel distance to feet(/5), then to yard(/3)
 			vecFromPar *= 1.0 / 15.0;
+//			if(parts[i].partName.compare("QB") == 0)
+//				vecFromPar = Point2d(5, 0);
 			double spScore = -1.0 * norm(vecFromPar - parts[i].relLocToPar);
 			partScores.push_back(spScore);
 			if(spScore < minScore)
 				minScore = spScore;
+//			double totalScore =  spScore + parts[i].appScore;
+//			partScores.push_back(totalScore);
+//			if(totalScore < minScore)
+//				minScore = totalScore;
 		}
 		scoreMat.push_back(partScores);
 	}
@@ -426,7 +448,7 @@ void formTree::findBestFormHungarian()
 		readMat(matSize, scoreFile + ".scoreMat", scoreMat);
 		if(system("./../hungarian/hungarian -v 0 -i Hungarian/tmp.scoreMat"))
 		{
-			cout << "Can not run hungarian." << endl;;
+			cout << "Can not run hungarian." << endl;
 			return;
 		}
 		vector<vector<double> > matchMat;
@@ -491,14 +513,14 @@ void formTree::plotFormOrigImg(Mat &img, const Mat &fldToOrgHMat)
 //		convertScore << score;
 //		string scoreStr = convertScore.str();
 //		putText(img, scoreStr, partsLocOrig[i] - Point2d(0, pixShiftNum), fontFace, fontScale, CV_RGB(0, 0, 255), thickness,8);
-//
+////
 //		double apScore = double(int(parts[i].appScore * 100)) / 100.0;
 //		ostringstream convertApScore;
 //		convertApScore << apScore;
 //		string apScoreStr = convertApScore.str();
 //		apScoreStr = "a: " + apScoreStr;
 //		putText(img, apScoreStr, partsLocOrig[i] - Point2d(0, pixShiftNum * 2.0), fontFace, fontScale, CV_RGB(0, 0, 255), thickness,8);
-//
+
 //		double spScore = double(int(parts[i].spaScore * 100)) / 100.0;
 //		ostringstream convertSpScore;
 //		convertSpScore << spScore;

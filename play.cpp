@@ -1671,8 +1671,8 @@ void play::rectification(Mat& orgToFldHMat)
 
 	string dstImgPath = "rectImages/Game" + gameIdStr + "/vid" + vidIdxStr + "Rect.jpg";
 	imwrite(dstImgPath, dstImg);
-	string fgImgPath = "rectImages/Game" + gameIdStr + "/vid" + vidIdxStr + "RectFg.jpg";
-	imwrite(fgImgPath, rectFgImgTmp);
+//	string fgImgPath = "rectImages/Game" + gameIdStr + "/vid" + vidIdxStr + "RectFg.jpg";
+//	imwrite(fgImgPath, rectFgImgTmp);
 }
 
 void play::writeMatchPnts()
@@ -2360,7 +2360,8 @@ void play::detectForms(direction offSide)
 	}
 	perspectiveTransform(playersLocSet, pLocSetFld, orgToFldHMat);
 
-	getOffensePlayers(playersLocSet, pLocSetFld, this, players, offSide);
+//	getOffensePlayers(playersLocSet, pLocSetFld, this, players, offSide);
+//	getOffensePlayers(playersLocSet, pLocSetFld, this, players, offSide, scores);
 
 	double bestFormScore = NEGINF;
 	formTree* bestForm;
@@ -2382,9 +2383,10 @@ void play::detectForms(direction offSide)
 //		f->findBestFormHungarian(vidFormId);
 
 		vector<Point2d> olLocSet;
-		getRectLosPnts(rectLosBndBox, olLocSet);
-//		olLocSet.push_back(rectLosCnt);
+//		getRectLosPnts(rectLosBndBox, olLocSet);
+		olLocSet.push_back(rectLosCnt);
 		f->setupPartsLocSetHungarian(olLocSet, pLocSetFld);
+//		f->setupPartsLocSetHungarian(olLocSet, pLocSetFld, scores);
 		f->findBestFormHungarian();
 		if(f->formBestScore >= bestFormScore)
 		{
@@ -2398,6 +2400,193 @@ void play::detectForms(direction offSide)
 	cout << bestForm->formName << bestForm->formBestScore << endl;
 
 	bestForm->plotFormOrigImg(mosFrame, fldToOrgHMat);
+	string playersImagePath = "Results/Game" + gameIdStr + "/playersPlots/" + gameIdStr +"0" + vidIdxStr + ".jpg";
+	imwrite(playersImagePath, mosFrame);
+
+}
+
+void play::detectFormsGt(direction offSide)
+{
+	Mat orgToFldHMat;
+	rectification(orgToFldHMat);
+	Mat fldToOrgHMat;
+	getOverheadFieldHomo(fldToOrgHMat);
+
+	string formFilePath = "formAnnotations/Game" + gameIdStr + "/" + "vid" + vidIdxStr + ".form";
+	vector<struct rect> players;
+	readFormationGt(formFilePath, players, losBndBox, losCnt);
+//	cout << "losCnt " << losCnt.x << " " << losCnt.y << endl;
+	vector<Point2d> srcLosVec, dstLosVec;
+	srcLosVec.push_back(losBndBox.a);
+	srcLosVec.push_back(losBndBox.b);
+	srcLosVec.push_back(losBndBox.c);
+	srcLosVec.push_back(losBndBox.d);
+	srcLosVec.push_back(losCnt);
+	perspectiveTransform(srcLosVec, dstLosVec, orgToFldHMat);
+	rectLosBndBox.a = dstLosVec[0];
+	rectLosBndBox.b = dstLosVec[1];
+	rectLosBndBox.c = dstLosVec[2];
+	rectLosBndBox.d = dstLosVec[3];
+	rectLosCnt = dstLosVec[4];
+	plotRect(mosFrame, losBndBox, Scalar(255, 0, 0));
+
+	string formsFile = "formModel/formations";
+	vector<string> formations;
+//	readFormsFile(formsFile, rightDir, formations);
+	readFormsFile(formsFile, formations);
+
+	vector<Point2d> playersLocSet, pLocSetFld, offensePLocSetFld;
+	for(unsigned int i = 0; i < players.size(); ++i)
+	{
+//		Point2d p = Point2d(0.5 * (players[i].a.x + players[i].c.x),
+//				0.5 * (players[i].a.y + players[i].c.y) );
+		Point2d p = Point2d(0.5 * (players[i].b.x + players[i].c.x),
+				0.5 * (players[i].b.y + players[i].c.y) );
+		playersLocSet.push_back(p);
+		plotRect(mosFrame, players[i], Scalar(0, 0, 255));
+	}
+	perspectiveTransform(playersLocSet, pLocSetFld, orgToFldHMat);
+
+//	getOffensePlayers(playersLocSet, pLocSetFld, this, players, offSide);
+//	getOffensePlayers(playersLocSet, pLocSetFld, this, players, offSide, scores);
+
+	double bestFormScore = NEGINF;
+	formTree* bestForm;
+	vector<formTree*> fTrees;
+	for(unsigned int i = 0; i < formations.size(); ++i)
+	{
+//		formTree* f = new formTree(formations[i]);
+		formTree* f = new formTree(formations[i], offSide);
+//		f->setupPartsLocSetStarModel(rectLosCnt, pLocSetFld, scores);
+//		f->findBestFormStarModel();
+
+//		f->setupPartsLocSetHungarian(rectLosCnt, pLocSetFld);
+//		string vidFormId = "Hungarian/Game" + gameIdStr + "/vid" + vidIdxStr + "F";
+//		ostringstream convertVidForm;
+//		convertVidForm << i;
+//		vidFormId = vidFormId + convertVidForm.str();
+//		cout << vidFormId << endl;
+////		f->getScoreMat(vidFormId);
+//		f->findBestFormHungarian(vidFormId);
+
+		vector<Point2d> olLocSet;
+//		getRectLosPnts(rectLosBndBox, olLocSet);
+		olLocSet.push_back(rectLosCnt);
+		f->setupPartsLocSetHungarian(olLocSet, pLocSetFld);
+//		f->setupPartsLocSetHungarian(olLocSet, pLocSetFld, scores);
+		f->findBestFormHungarian();
+		if(f->formBestScore >= bestFormScore)
+		{
+			bestFormScore = f->formBestScore;
+			bestForm = f;
+			fTrees.push_back(f);
+		}
+	}
+
+
+	cout << bestForm->formName << bestForm->formBestScore << endl;
+
+	bestForm->plotFormOrigImg(mosFrame, fldToOrgHMat);
+	string playersImagePath = "Results/Game" + gameIdStr + "/playersPlots/" + gameIdStr +"0" + vidIdxStr + ".jpg";
+	imwrite(playersImagePath, mosFrame);
+
+}
+
+void play::labelPlayersAngle()
+{
+	Mat orgToFldHMat;
+	rectification(orgToFldHMat);
+	Mat fldToOrgHMat;
+	getOverheadFieldHomo(fldToOrgHMat);
+
+	string formFilePath = "formAnnotations/Game" + gameIdStr + "/" + "vid" + vidIdxStr + ".form";
+	vector<struct rect> players;
+	readFormationGt(formFilePath, players, losBndBox, losCnt);
+//	cout << "losCnt " << losCnt.x << " " << losCnt.y << endl;
+	vector<Point2d> srcLosVec, dstLosVec;
+	srcLosVec.push_back(losBndBox.a);
+	srcLosVec.push_back(losBndBox.b);
+	srcLosVec.push_back(losBndBox.c);
+	srcLosVec.push_back(losBndBox.d);
+	srcLosVec.push_back(losCnt);
+	perspectiveTransform(srcLosVec, dstLosVec, orgToFldHMat);
+	rectLosBndBox.a = dstLosVec[0];
+	rectLosBndBox.b = dstLosVec[1];
+	rectLosBndBox.c = dstLosVec[2];
+	rectLosBndBox.d = dstLosVec[3];
+	rectLosCnt = dstLosVec[4];
+	plotRect(mosFrame, losBndBox, Scalar(255, 0, 0));
+
+	string formsFile = "formModel/formations";
+	vector<string> formations;
+//	readFormsFile(formsFile, rightDir, formations);
+	readFormsFile(formsFile, formations);
+
+	vector<Point2d> playersLocSet, pLocSetFld, offensePLocSetFld;
+	for(unsigned int i = 0; i < players.size(); ++i)
+	{
+//		Point2d p = Point2d(0.5 * (players[i].b.x + players[i].c.x),
+//				0.5 * (players[i].b.y + players[i].c.y) );
+		Point2d p = Point2d(0.25 * (players[i].a.x + players[i].b.x + players[i].c.x + players[i].d.x),
+				0.25 * (players[i].a.y + players[i].b.y + players[i].c.y + players[i].d.y) );
+		playersLocSet.push_back(p);
+		plotRect(mosFrame, players[i], Scalar(0, 0, 255));
+	}
+	perspectiveTransform(playersLocSet, pLocSetFld, orgToFldHMat);
+
+	vector<string> playersTypes;
+	Point2d vectVec(.0, 1);
+//	double angThresh = 1 / sqrt(2);
+	double angThresh = 0.5 * sqrt(3);
+//	cout << "angThresh " << angThresh << endl;
+	for(unsigned int i = 0; i < pLocSetFld.size(); ++i)
+	{
+		Point2d vecLosToP = pLocSetFld[i] - rectLosCnt;
+		vecLosToP *= 1.0 / norm(vecLosToP);
+		double dotPr = vecLosToP.ddot(vectVec);
+		cout << "dotPr " << dotPr << endl;
+		if(abs(dotPr) >= angThresh)
+			playersTypes.push_back("WR");
+		else
+			playersTypes.push_back("HB");
+	}
+
+	double minYDistToLos = INF;
+	int qbIdx = -1;
+	for(unsigned int i = 0; i < playersTypes.size(); ++i)
+	{
+//		cout << playersTypes[i] << endl;
+		if(playersTypes[i].compare("HB") == 0)
+		{
+//			double yDistToLos = abs(pLocSetFld[i].y - rectLosCnt.y);
+			double yDistToLos = norm(pLocSetFld[i] - rectLosCnt);
+			if(yDistToLos < minYDistToLos)
+			{
+				minYDistToLos = yDistToLos;
+				qbIdx = i;
+			}
+		}
+	}
+	if(qbIdx >= 0)
+		playersTypes[qbIdx] = "QB";
+
+	int fontFace = 0;
+	double fontScale = 1;
+	int thickness = 2;
+	for(unsigned int i = 0; i < playersTypes.size(); ++i)
+	{
+		cout << playersTypes[i] << endl;
+		putText(mosFrame, playersTypes[i], playersLocSet[i], fontFace, fontScale, CV_RGB(0, 0, 255), thickness,8);
+
+		int len = 5;
+		line(mosFrame, playersLocSet[i] - Point2d(len, 0), playersLocSet[i] + Point2d(len, 0), CV_RGB(0, 255, 0),2,8,0);
+		line(mosFrame, playersLocSet[i] - Point2d(0, len), playersLocSet[i] + Point2d(0, len), CV_RGB(0, 255, 0),2,8,0);
+	}
+
+	int len = 5;
+	line(mosFrame, losCnt - Point2d(len, 0), losCnt + Point2d(len, 0), CV_RGB(0, 255, 0),2,8,0);
+	line(mosFrame, losCnt- Point2d(0, len), losCnt + Point2d(0, len), CV_RGB(0, 255, 0),2,8,0);
+
 	string playersImagePath = "Results/Game" + gameIdStr + "/playersPlots/" + gameIdStr +"0" + vidIdxStr + ".jpg";
 	imwrite(playersImagePath, mosFrame);
 

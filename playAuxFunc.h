@@ -72,13 +72,19 @@ void readFormsFile(const string &formsFile, direction offSide, vector<string> &f
 
 void readFormsFile(const string &formsFile, vector<string> &formations);
 
-void readPlayerBndBoxes(const string &playersFilePath, 	vector<double> &scores,
+void readPlayerBndBoxes(const string &playersFilePath, vector<double> &scores,
 		vector<struct rect> &players, vector<double> &areas);
+
+void readFormationGt(const string &formFilePath, vector<struct rect> &players,
+	rect &losBndBox, Point2d &losCnt);
 
 void plotRectAvgClr(Mat& img, const struct rect& rct, Scalar clr, Point3d &avgClr);
 
 void getOffensePlayers(vector<Point2d> &playersLocSet, vector<Point2d> &pLocSetFld,
 		play* p, vector<struct rect> &players, direction offDir);
+
+//void getOffensePlayers(vector<Point2d> &playersLocSet, vector<Point2d> &pLocSetFld,
+//		play* p, vector<struct rect> &players, direction offDir, vector<double> &scores);
 
 void getRectLosPnts(const struct rect &rectLosBndBox, std::vector<cv::Point2d> &olLocSet);
 

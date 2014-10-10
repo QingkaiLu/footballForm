@@ -104,6 +104,11 @@ public:
 	void drawPlayerBndBoxesRectFld();
 
 	void detectForms(direction offSide);
+	//detect formation with ground truth of player positions.
+	void detectFormsGt(direction offSide);
+
+	//label player types based on angel to LOS center
+	void labelPlayersAngle();
 
 public:
 	struct playId pId;

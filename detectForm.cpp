@@ -66,7 +66,8 @@ void detectForm(const vector<int> &games, const vector<int> &gamesFld)
 		if(gameId < 10)
 			gameIdStr = "0" + gameIdStr;
 
-		string odLabelFilePath = "randTreesTrainData/odPlays/odGame" + gameIdStr + "Rect";
+//		string odLabelFilePath = "randTreesTrainData/odPlays/odGame" + gameIdStr + "Rect";
+		string odLabelFilePath = "randTreesTrainData/odPlays/odGame" + gameIdStr + "RectForm";
 		vector<playId> pIds;
 		vector<string> dirs, odLabels;
 
@@ -93,7 +94,9 @@ void detectForm(const vector<int> &games, const vector<int> &gamesFld)
 				cout << "Wrong od labels!" << endl;
 				return;
 			}
-			p->detectForms(offSide);
+//			p->detectForms(offSide);
+//			p->detectFormsGt(offSide);
+			p->labelPlayersAngle();
 		}
 	}
 }

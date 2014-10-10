@@ -646,6 +646,51 @@ void readPlayerBndBoxes(const string &playersFilePath, 	vector<double> &scores,
 	fin.close();
 }
 
+void readFormationGt(const string &formFilePath, vector<struct rect> &players,
+	rect &losBndBox, Point2d &losCnt)
+{
+	ifstream fin(formFilePath.c_str());
+
+	if(!fin.is_open())
+	{
+		cout << "Can't open file " << formFilePath << endl;
+		return;
+	}
+
+	fin.seekg(0, ios::end);
+	if (fin.tellg() == 0) {
+		cout << "Empty file " << formFilePath << endl;
+		return;
+	}
+	fin.seekg(0, ios::beg);
+	string tmp, formName;
+	fin >> tmp >> formName;
+	fin >> tmp >> losCnt.x >> losCnt.y;
+//	cout << losCnt.x << " " << losCnt.y << endl;
+	int itr = 0;
+	while(!fin.eof())
+	{
+		string pType;
+		double xMin = NEGINF, yMin, xMax, yMax;
+		fin >> pType >> xMin >> yMin >> xMax >> yMax;
+		if(xMin == NEGINF)
+			break;
+//		cout << playId << score << endl; // >> xMin >> yMin >> xMax >> yMax;
+		struct rect player;
+		player.a = Point2d(xMin, yMin);
+		player.b = Point2d(xMin, yMax);
+		player.c = Point2d(xMax, yMax);
+		player.d = Point2d(xMax, yMin);
+		if(itr == 0)//los bounding box
+			losBndBox = player;
+		else
+			players.push_back(player);
+		++itr;
+	}
+
+	fin.close();
+}
+
 void plotRectAvgClr(Mat& img, const struct rect& rct, Scalar clr, Point3d &avgClr)
 {
 	line(img, rct.a, rct.b, clr,2,8,0);
@@ -798,6 +843,105 @@ void getOffensePlayers(vector<Point2d> &playersLocSet, vector<Point2d> &pLocSetF
 
 }
 
+//void getOffensePlayers(vector<Point2d> &playersLocSet, vector<Point2d> &pLocSetFld,
+//		play* p, vector<struct rect> &players, direction offDir, vector<double> &scores)
+//{
+//	scores.clear();
+//	int fontFace = 0;
+//	double fontScale = 1;
+//	int thickness = 2;
+//
+//	vector<Point2d> pInsideFldSet, pInsideFldSetFld;
+//	vector<struct rect> playersInsideFld;
+//	for(unsigned int i = 0; i< pLocSetFld.size(); ++i)
+//	{
+//		if(p->fld->isPointInsideFld(pLocSetFld[i]))
+//		{
+//			pInsideFldSet.push_back(playersLocSet[i]);
+//			pInsideFldSetFld.push_back(pLocSetFld[i]);
+//			playersInsideFld.push_back(players[i]);
+//
+//		}
+//	}
+//	Mat samples(playersInsideFld.size(), 3, CV_32F);
+//	for(unsigned int i = 0; i < playersInsideFld.size(); ++i)
+//	{
+////		plotRect(mosFrame, players[i], Scalar(0, 0, 255));
+//		Point3d avgClr;
+//		plotRectAvgClr(p->mosFrame, playersInsideFld[i], Scalar(0, 0, 255), avgClr);
+//		samples.at<float>(i, 0) = avgClr.x;
+//		samples.at<float>(i, 1) = avgClr.y;
+//		samples.at<float>(i, 2) = avgClr.z;
+//	}
+//
+//	int K = 2;
+//	Mat labels;
+//	int attempts = 5;
+//	Mat centers;
+//	kmeans(samples, K, labels, TermCriteria(CV_TERMCRIT_ITER|CV_TERMCRIT_EPS, 10000, 0.0001), attempts, KMEANS_PP_CENTERS, centers );
+//
+//	int num1 = 0, num2 = 0;
+//	for(unsigned int i = 0; i < pInsideFldSetFld.size(); ++i)
+//	{
+//		if((offDir == leftDir && pInsideFldSetFld[i].x < p->rectLosCnt.x) ||
+//				(offDir == rightDir && pInsideFldSetFld[i].x > p->rectLosCnt.x))
+//		{
+//			int label = labels.at<int>(i, 0);
+//			if(label == 0)
+//				++num1;
+//			else if(label == 1)
+//				++num2;
+//			Point3d uniformClr(samples.at<float>(i, 0), samples.at<float>(i, 1), samples.at<float>(i, 2));
+//			Point3d cntClr(centers.at<float>(label, 0), centers.at<float>(label, 1), centers.at<float>(label, 2));
+//			scores.push_back(norm(uniformClr - cntClr));
+//		}
+//	}
+//
+//	int offLabel;
+//	if(num1 > num2)
+//		offLabel = 0;
+//	else if(num1 < num2)
+//		offLabel = 1;
+//	else
+//	{
+////		offLabel = 0;
+//		cout << "Can not decide the color of offense players." << endl;
+//		return;
+//	}
+//
+//	vector<Point2d> pOffSet, pOffSetFld;
+//	vector<struct rect> playersOff;
+//
+//	for(unsigned int i = 0; i < pInsideFldSetFld.size(); ++i)
+//	{
+//		ostringstream convertScore;
+//		convertScore << labels.at<int>(i, 0);
+//		string scoreStr = convertScore.str();
+//		putText(p->mosFrame, scoreStr, playersInsideFld[i].a, fontFace, fontScale, CV_RGB(0, 0, 255), thickness,8);
+//
+//		if(labels.at<int>(i, 0) == offLabel)
+//		{
+//			//get rid of the players which are on the defense side and far away(5 yard) from the LOS
+//			if((offDir == leftDir && pInsideFldSetFld[i].x < (p->rectLosCnt.x + 5 * 3 * 5)) ||
+//					(offDir == rightDir && pInsideFldSetFld[i].x > (p->rectLosCnt.x - 5 * 3 * 5)))
+//			{
+//				pOffSet.push_back(pInsideFldSet[i]);
+//				pOffSetFld.push_back(pInsideFldSetFld[i]);
+//				playersOff.push_back(playersInsideFld[i]);
+//			}
+//		}
+//	}
+//
+//	playersLocSet = pOffSet;
+//	pLocSetFld = pOffSetFld;
+//	players = playersOff;
+//
+//	for(unsigned int i = 0; i < players.size(); ++i)
+//		plotRect(p->mosFrame, players[i], Scalar(255, 0, 0));
+//
+//}
+
+
 void getRectLosPnts(const struct rect &rectLosBndBox, std::vector<cv::Point2d> &olLocSet)
 {
 	int xMin = rectLosBndBox.a.x;
@@ -805,8 +949,8 @@ void getRectLosPnts(const struct rect &rectLosBndBox, std::vector<cv::Point2d> &
 	int yMin = rectLosBndBox.a.y;
 	int yMax = rectLosBndBox.c.y;
 	int step = 5;
-	for(unsigned int x = xMin; x <= xMax; x += step)
-		for(unsigned int y = yMin; y <= yMax; y += step)
+	for(int x = xMin; x <= xMax; x += step)
+		for(int y = yMin; y <= yMax; y += step)
 			olLocSet.push_back(Point2d(x, y));
 }
 
