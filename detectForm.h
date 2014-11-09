@@ -7,4 +7,10 @@ void detectForm(const std::vector<int> &games, const std::vector<int> &gamesFld,
 
 void detectForm(const std::vector<int> &games, const std::vector<int> &gamesFld);
 
+void getPTypesLearningSamples(const std::vector<int> &games, const std::vector<int> &gamesFld,
+		cv::Mat &trainFeaturesMat, cv::Mat &trainLabelsMat);
+
+void lablePTypesKNN(const std::vector<int> &games, const std::vector<int> &gamesFld,
+		const cv::Mat &trainFeaturesMat, const cv::Mat &trainLabelsMat);
+
 #endif

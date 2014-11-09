@@ -67,6 +67,7 @@ public:
 
 	void rectification();
 	void rectification(Mat& orgToFldHMat);
+	void rctfWithoutDetectLos(Mat& orgToFldHMat);
 	void writeMatchPnts();
 	void extractOdStripsFeatRect(direction dir, vector<int> &featureVec);
 	void extractOdGridsFeatRect(direction dir, vector<int> &featureVec);
@@ -107,8 +108,16 @@ public:
 	//detect formation with ground truth of player positions.
 	void detectFormsGt(direction offSide);
 
-	//label player types based on angel to LOS center
-	void labelPlayersAngle();
+	//label player types based on angel to LOS center with formation annotations
+	void labelPlayersAngleGt();
+	void labelPlayersAngle(direction offSide);
+
+	void getPlayersToLosVecs(vector<Point2d> &pToLosVec, vector<int> &pTypesId);
+	void lablePTypesKnnFixedLosCnt(direction offSide, const Mat &trainFeaturesMat, const Mat &trainLabelsMat);
+	void lablePTypesKnnVarLosCnts(direction offSide, const Mat &trainFeaturesMat, const Mat &trainLabelsMat);
+//	void lablePTypesKnnVarLosCnts2(direction offSide, const Mat &trainFeaturesMat, const Mat &trainLabelsMat);
+	void getLosBndBoxByUfmClr();
+	void getLosBndBoxByClrAndFg();
 
 public:
 	struct playId pId;

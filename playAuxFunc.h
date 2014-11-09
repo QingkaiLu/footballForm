@@ -78,14 +78,45 @@ void readPlayerBndBoxes(const string &playersFilePath, vector<double> &scores,
 void readFormationGt(const string &formFilePath, vector<struct rect> &players,
 	rect &losBndBox, Point2d &losCnt);
 
+void readFormationGt(const string &formFilePath, vector<struct rect> &players,
+	vector<string> &pTypes, rect &losBndBox, Point2d &losCnt);
+
 void plotRectAvgClr(Mat& img, const struct rect& rct, Scalar clr, Point3d &avgClr);
+
+void getRectAvgClr(Mat& img, const struct rect& rct, Point3d &avgClr);
+
+void getOrgImgRectAvgClr(Mat& img, const struct rect& rct, const Mat &fldToOrgHMat, Point3d &avgClr);
 
 void getOffensePlayers(vector<Point2d> &playersLocSet, vector<Point2d> &pLocSetFld,
 		play* p, vector<struct rect> &players, direction offDir);
+
+void getOffsPlayersByLos(vector<Point2d> &playersLocSet, vector<Point2d> &pLocSetFld, const vector<Point2d> &pFeetLocSetFld,
+		play* p, vector<struct rect> &players, direction offDir);
+
+void getPlayersInsdFld(vector<Point2d> &playersLocSet, vector<Point2d> &pLocSetFld,
+		play* p, vector<struct rect> &players);
+
+void getOffsPlayersByLos(vector<Point2d> &pLocSetFld, play* p, direction offDir);
+
 
 //void getOffensePlayers(vector<Point2d> &playersLocSet, vector<Point2d> &pLocSetFld,
 //		play* p, vector<struct rect> &players, direction offDir, vector<double> &scores);
 
 void getRectLosPnts(const struct rect &rectLosBndBox, std::vector<cv::Point2d> &olLocSet);
+
+int convertPTypeToPId(const string &pType);
+
+string convertPIdToPType(int pId);
+
+void computeLosCntPosCost(play* p, const vector<Point2d> &offsPLocSetFld, const Mat &trainFeaturesMat,
+		const Mat &trainLabelsMat, vector<double> &allCosts, vector<string> &playersTypes);
+
+double getUniformClrCost(const vector<struct rect> &offsPlayers, play* p);
+
+double getColorDif(const Rect &r, Mat &img);
+
+double getOrgImgColorDif(const Rect &r, Mat &img, const Mat &fldToOrgHMat);
+
+double getFgAreaRatio(const Rect &r, const Mat &img);
 
 #endif

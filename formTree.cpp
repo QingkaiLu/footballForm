@@ -539,6 +539,53 @@ void formTree::plotFormOrigImg(Mat &img, const Mat &fldToOrgHMat)
 
 }
 
+void formTree::plotFormRectImg(Mat &rectImg)
+{
+	int fontFace = 0;
+	double fontScale = 1;
+	int thickness = 2;
+
+	for(unsigned int i = 0; i < parts.size(); ++i)
+	{
+//		cout << parts[i].partName << endl;
+		putText(rectImg, parts[i].partName, parts[i].location, fontFace, fontScale, CV_RGB(0, 0, 255), thickness,8);
+
+		int len = 5;
+		line(rectImg, parts[i].location - Point2d(len, 0), parts[i].location + Point2d(len, 0), CV_RGB(0, 255, 0),2,8,0);
+		line(rectImg, parts[i].location - Point2d(0, len), parts[i].location + Point2d(0, len), CV_RGB(0, 255, 0),2,8,0);
+
+//		double pixShiftNum = 15;
+//		double score = double(int(parts[i].score * 100)) / 100.0;
+//		ostringstream convertScore;
+//		convertScore << score;
+//		string scoreStr = convertScore.str();
+//		putText(img, scoreStr, partsLocOrig[i] - Point2d(0, pixShiftNum), fontFace, fontScale, CV_RGB(0, 0, 255), thickness,8);
+////
+//		double apScore = double(int(parts[i].appScore * 100)) / 100.0;
+//		ostringstream convertApScore;
+//		convertApScore << apScore;
+//		string apScoreStr = convertApScore.str();
+//		apScoreStr = "a: " + apScoreStr;
+//		putText(img, apScoreStr, partsLocOrig[i] - Point2d(0, pixShiftNum * 2.0), fontFace, fontScale, CV_RGB(0, 0, 255), thickness,8);
+
+//		double spScore = double(int(parts[i].spaScore * 100)) / 100.0;
+//		ostringstream convertSpScore;
+//		convertSpScore << spScore;
+//		string spScoreStr = convertSpScore.str();
+//		spScoreStr = "s: " + spScoreStr;
+//		putText(img, spScoreStr, partsLocOrig[i] - Point2d(0, pixShiftNum * 3.0), fontFace, fontScale, CV_RGB(0, 0, 255), thickness,8);
+	}
+
+	putText(rectImg, formName, Point2d(10, 30), fontFace, fontScale, CV_RGB(0, 0, 255), thickness,8);
+
+	double score = double(int(formBestScore * 100)) / 100.0;
+	ostringstream convertScore;
+	convertScore << score;
+	string scoreStr = convertScore.str();
+	putText(rectImg, scoreStr, Point2d(10, 55), fontFace, fontScale, CV_RGB(0, 0, 255), thickness,8);
+
+}
+
 void makeScoreMatSquare(vector<vector<double> > &scoreMat, double minScore)
 {
 	minScore -= 1;

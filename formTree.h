@@ -49,6 +49,7 @@ public:
 	void findBestFormHungarian();
 
 	void plotFormOrigImg(cv::Mat &img, const cv::Mat &fldToOrgHMat);
+	void plotFormRectImg(cv::Mat &rectImg);
 public:
 	std::vector<part> parts;
 	std::string formName;

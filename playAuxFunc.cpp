@@ -3,6 +3,8 @@
 #include <sstream>
 #include <algorithm>
 #include <limits>
+#include <cv.h>
+#include <ml.h>
 #include "playAuxFunc.h"
 #include "play.h"
 #include "fieldModel.h"
@@ -691,12 +693,64 @@ void readFormationGt(const string &formFilePath, vector<struct rect> &players,
 	fin.close();
 }
 
+
+void readFormationGt(const string &formFilePath, vector<struct rect> &players,
+		vector<string> &pTypes, rect &losBndBox, Point2d &losCnt)
+{
+	ifstream fin(formFilePath.c_str());
+
+	if(!fin.is_open())
+	{
+		cout << "Can't open file " << formFilePath << endl;
+		return;
+	}
+
+	fin.seekg(0, ios::end);
+	if (fin.tellg() == 0) {
+		cout << "Empty file " << formFilePath << endl;
+		return;
+	}
+	fin.seekg(0, ios::beg);
+	string tmp, formName;
+	fin >> tmp >> formName;
+	fin >> tmp >> losCnt.x >> losCnt.y;
+//	cout << losCnt.x << " " << losCnt.y << endl;
+	int itr = 0;
+	while(!fin.eof())
+	{
+		string pType;
+		double xMin = NEGINF, yMin, xMax, yMax;
+		fin >> pType >> xMin >> yMin >> xMax >> yMax;
+		if(xMin == NEGINF)
+			break;
+//		cout << playId << score << endl; // >> xMin >> yMin >> xMax >> yMax;
+		struct rect player;
+		player.a = Point2d(xMin, yMin);
+		player.b = Point2d(xMin, yMax);
+		player.c = Point2d(xMax, yMax);
+		player.d = Point2d(xMax, yMin);
+		if(itr == 0)//los bounding box
+			losBndBox = player;
+		else
+		{
+			players.push_back(player);
+			pTypes.push_back(pType);
+//			cout << pType << endl;
+//			cout << player.a.x << ", " << player.a.y << endl;
+		}
+		++itr;
+	}
+
+	fin.close();
+}
+
 void plotRectAvgClr(Mat& img, const struct rect& rct, Scalar clr, Point3d &avgClr)
 {
 	line(img, rct.a, rct.b, clr,2,8,0);
 	line(img, rct.b, rct.c, clr,2,8,0);
 	line(img, rct.c, rct.d, clr,2,8,0);
 	line(img, rct.d, rct.a, clr,2,8,0);
+
 //	Point3d avgClr(.0, .0, .0);
 //	for(int x = rct.a.x - 1; x < rct.c.x; ++x)
 //	  for(int y = rct.a.y - 1; y < rct.c.y; ++y)
@@ -748,6 +802,56 @@ void plotRectAvgClr(Mat& img, const struct rect& rct, Scalar clr, Point3d &avgCl
 //
 //	putText(img, RGB, rct.b, fontFace, fontScale, CV_RGB(0, 0, 255), thickness,8);
 
+}
+
+void getRectAvgClr(Mat& img, const struct rect& rct, Point3d &avgClr)
+{
+	avgClr = Point3d(.0, .0, .0);
+	for(int x = rct.a.x; x <= rct.c.x; ++x)
+	  for(int y = rct.a.y; y <= rct.c.y; ++y)
+		  {
+			  Point3_<uchar>* p = img.ptr<Point3_<uchar> >(y, x);
+			  avgClr.x += p->x;//B
+			  avgClr.y += p->y;//G
+			  avgClr.z += p->z;//R
+		  }
+	avgClr *= 1.0 / (double)((rct.c.x - rct.a.x) * (rct.c.y - rct.a.y));
+
+//	Point2d cnt = 0.5 * (rct.a + rct.c);
+//	int w = 10;
+//	for(int x = -1.0 * w; x <= w; ++x)
+//	  for(int y = -1.0 * w; y <= w; ++y)
+//		  {
+//			  Point3_<uchar>* p = img.ptr<Point3_<uchar> >(cnt.y - 1 + y, cnt.x - 1 + x);
+//			  avgClr.x += p->x;//B
+//			  avgClr.y += p->y;//G
+//			  avgClr.z += p->z;//R
+//		  }
+//	avgClr *= 1.0 / ((2 * w + 1) * (2 * w + 1));
+//	line(img, cnt + Point2d(-1.0 * w, -1.0 * w), cnt + Point2d(-1.0 * w, w), clr,2,8,0);
+//	line(img, cnt + Point2d(-1.0 * w, w), cnt + Point2d(w, w), clr,2,8,0);
+//	line(img, cnt + Point2d(w, w), cnt + Point2d(w, -1.0 * w), clr,2,8,0);
+//	line(img, cnt + Point2d(w, -1.0 * w), cnt + Point2d(-1.0 * w, -1.0 * w), clr,2,8,0);
+
+}
+
+void getOrgImgRectAvgClr(Mat& img, const struct rect& rct, const Mat &fldToOrgHMat, Point3d &avgClr)
+{
+	avgClr = Point3d(.0, .0, .0);
+	vector<Point2d> srcLosVec, dstLosVec;
+	int step = 2;
+	for(int x = rct.a.x; x <= rct.c.x; x += step)
+	  for(int y = rct.a.y; y <= rct.c.y; y += step)
+		  srcLosVec.push_back(Point2d(x, y));
+	perspectiveTransform(srcLosVec, dstLosVec, fldToOrgHMat);
+	for(unsigned int i = 0; i < dstLosVec.size(); ++i)
+	{
+		  Point3_<uchar>* p = img.ptr<Point3_<uchar> >(int(dstLosVec[i].y), int(dstLosVec[i].x));
+		  avgClr.x += p->x;//B
+		  avgClr.y += p->y;//G
+		  avgClr.z += p->z;//R
+	}
+	avgClr *= 1.0 / (double)dstLosVec.size();
 }
 
 void getOffensePlayers(vector<Point2d> &playersLocSet, vector<Point2d> &pLocSetFld,
@@ -841,6 +945,116 @@ void getOffensePlayers(vector<Point2d> &playersLocSet, vector<Point2d> &pLocSetF
 	for(unsigned int i = 0; i < players.size(); ++i)
 		plotRect(p->mosFrame, players[i], Scalar(255, 0, 0));
 
+}
+
+void getOffsPlayersByLos(vector<Point2d> &playersLocSet, vector<Point2d> &pLocSetFld, const vector<Point2d> &pFeetLocSetFld,
+		play* p, vector<struct rect> &players, direction offDir)
+{
+	vector<Point2d> pInsideFldSet, pInsideFldSetFld;
+	vector<struct rect> playersInsideFld;
+	for(unsigned int i = 0; i< pLocSetFld.size(); ++i)
+	{
+//		if(p->fld->isPointInsideFld(pLocSetFld[i]))
+		if(p->fld->isPointInsideFld(pLocSetFld[i]) ||
+				//in case the center of wide receivers on top is outside of field
+				// 45/15 = 3 yards
+				p->fld->isPointInsideFld(pLocSetFld[i] + Point2d(0, 45)))
+//				p->fld->isPointInsideFld(pFeetLocSetFld[i]))
+		{
+			pInsideFldSet.push_back(playersLocSet[i]);
+			pInsideFldSetFld.push_back(pLocSetFld[i]);
+			playersInsideFld.push_back(players[i]);
+
+		}
+	}
+
+	vector<Point2d> pOffSet, pOffSetFld;
+	vector<struct rect> playersOff;
+
+	for(unsigned int i = 0; i < pInsideFldSetFld.size(); ++i)
+	{
+//		if((offDir == leftDir && pInsideFldSetFld[i].x < p->rectLosCnt.x) ||
+//				(offDir == rightDir && pInsideFldSetFld[i].x > p->rectLosCnt.x))
+		//relax LOS by 1 yard
+//		if((offDir == leftDir && pInsideFldSetFld[i].x < p->rectLosCnt.x + 15) ||
+//				(offDir == rightDir && pInsideFldSetFld[i].x > p->rectLosCnt.x - 15))
+		if((offDir == leftDir && pInsideFldSetFld[i].x < p->rectLosCnt.x + 5) ||
+				(offDir == rightDir && pInsideFldSetFld[i].x > p->rectLosCnt.x - 5))
+		{
+			pOffSet.push_back(pInsideFldSet[i]);
+			pOffSetFld.push_back(pInsideFldSetFld[i]);
+			playersOff.push_back(playersInsideFld[i]);
+		}
+	}
+
+	playersLocSet = pOffSet;
+	pLocSetFld = pOffSetFld;
+	players = playersOff;
+
+//	for(unsigned int i = 0; i < players.size(); ++i)
+//		plotRect(p->mosFrame, players[i], Scalar(255, 0, 0));
+}
+
+void getPlayersInsdFld(vector<Point2d> &playersLocSet, vector<Point2d> &pLocSetFld,
+		play* p, vector<struct rect> &players)
+{
+	vector<Point2d> pInsideFldSet, pInsideFldSetFld;
+	vector<struct rect> playersInsideFld;
+	for(unsigned int i = 0; i< pLocSetFld.size(); ++i)
+	{
+//		if(p->fld->isPointInsideFld(pLocSetFld[i]))
+		if(p->fld->isPointInsideFld(pLocSetFld[i]) ||
+				//in case the center of wide receivers on top is outside of field
+				// 45/15 = 3 yards
+				p->fld->isPointInsideFld(pLocSetFld[i] + Point2d(0, 45)))
+//				p->fld->isPointInsideFld(pFeetLocSetFld[i]))
+		{
+			pInsideFldSet.push_back(playersLocSet[i]);
+			pInsideFldSetFld.push_back(pLocSetFld[i]);
+			playersInsideFld.push_back(players[i]);
+
+		}
+	}
+	playersLocSet = pInsideFldSet;
+	pLocSetFld = pInsideFldSetFld;
+	players = playersInsideFld;
+}
+
+void getOffsPlayersByLos(vector<Point2d> &pLocSetFld, play* p, direction offDir)
+{
+	vector<Point2d> pInsideFldSet, pInsideFldSetFld;
+	vector<struct rect> playersInsideFld;
+	for(unsigned int i = 0; i< pLocSetFld.size(); ++i)
+	{
+//		if(p->fld->isPointInsideFld(pLocSetFld[i]))
+		if(p->fld->isPointInsideFld(pLocSetFld[i]) ||
+				//in case the center of wide receivers on top is outside of field
+				// 30/15 = 2 yards
+				p->fld->isPointInsideFld(pLocSetFld[i] + Point2d(0, 30)))
+		{
+			pInsideFldSetFld.push_back(pLocSetFld[i]);
+
+		}
+	}
+
+	vector<Point2d> pOffSet, pOffSetFld;
+	vector<struct rect> playersOff;
+
+	for(unsigned int i = 0; i < pInsideFldSetFld.size(); ++i)
+	{
+//		if((offDir == leftDir && pInsideFldSetFld[i].x < p->rectLosCnt.x) ||
+//				(offDir == rightDir && pInsideFldSetFld[i].x > p->rectLosCnt.x))
+		//relax LOS by 1 yard
+		if((offDir == leftDir && pInsideFldSetFld[i].x < p->rectLosCnt.x + 15) ||
+				(offDir == rightDir && pInsideFldSetFld[i].x > p->rectLosCnt.x - 15))
+		{
+			pOffSet.push_back(pInsideFldSet[i]);
+			pOffSetFld.push_back(pInsideFldSetFld[i]);
+			playersOff.push_back(playersInsideFld[i]);
+		}
+	}
+
+	pLocSetFld = pOffSetFld;
 }
 
 //void getOffensePlayers(vector<Point2d> &playersLocSet, vector<Point2d> &pLocSetFld,
@@ -948,10 +1162,277 @@ void getRectLosPnts(const struct rect &rectLosBndBox, std::vector<cv::Point2d> &
 	int xMax = rectLosBndBox.c.x;
 	int yMin = rectLosBndBox.a.y;
 	int yMax = rectLosBndBox.c.y;
-	int step = 5;
+//	int step = 5;
+	int step = 1;
 	for(int x = xMin; x <= xMax; x += step)
 		for(int y = yMin; y <= yMax; y += step)
 			olLocSet.push_back(Point2d(x, y));
 }
+
+int convertPTypeToPId(const string &pType)
+{
+	int pId = -1;
+	if(pType.compare("WRTop") == 0 || pType.compare("WRBot") == 0
+			|| pType.compare("WRMid") == 0)
+		pId = 1;
+	if(pType.compare("QB") == 0)
+		pId = 2;
+	if(pType.compare("RB") == 0)
+		pId = 3;
+	if(pType.compare("C") == 0)
+		pId = 4;
+	if(pType.compare("G") == 0)
+		pId = 5;
+	if(pType.compare("T") == 0)
+		pId = 6;
+	if(pType.compare("TE") == 0)
+		pId = 7;
+	if(pType.compare("H-b") == 0)
+		pId = 8;
+	if(pId == -1)
+		cout << "Convert to pID wrong!" << endl;
+	return pId;
+}
+
+string convertPIdToPType(int pId)
+{
+//	if(pId <= 0 || pId > 3)
+//	{
+//		cout << "Convert to pType wrong!" << endl;
+//		return NULL;
+//	}
+	string pType;
+	switch(pId){
+	case 1:
+		pType = "WR";
+		break;
+	case 2:
+		pType = "QB";
+		break;
+	case 3:
+		pType = "RB";
+		break;
+	case 4:
+		pType = "C";
+		break;
+	case 5:
+		pType = "G";
+		break;
+	case 6:
+		pType = "T";
+		break;
+	case 7:
+		pType = "TE";
+		break;
+	case 8:
+		pType = "H-b";
+		break;
+	default:
+		cout << "Convert to pType wrong!" << endl;
+		break;
+	}
+
+	return pType;
+}
+
+void computeLosCntPosCost(play* p, const vector<Point2d> &offsPLocSetFld, const Mat &trainFeaturesMat,
+		const Mat &trainLabelsMat, vector<double> &allCosts, vector<string> &playersTypes)
+{
+
+		Mat testFeaturesMat = Mat(offsPLocSetFld.size(), 2, CV_32FC1);
+		for(unsigned int i = 0; i < offsPLocSetFld.size(); ++i)
+		{
+			Point2d pToLosVec = offsPLocSetFld[i] - p->rectLosCnt;
+			testFeaturesMat.at<float>(i, 0) = pToLosVec.x;
+			testFeaturesMat.at<float>(i, 1) = pToLosVec.y;
+		}
+
+		int K = 3;
+		CvKNearest knn(trainFeaturesMat, trainLabelsMat, Mat(), false, K);
+		Mat neighborResponses(offsPLocSetFld.size(), K, CV_32FC1);
+		Mat results(offsPLocSetFld.size(), 1, CV_32FC1), dists(offsPLocSetFld.size(), K, CV_32FC1);
+		knn.find_nearest(testFeaturesMat, K, results, neighborResponses, dists);
+
+//		vector<string> playersTypes;
+		unsigned int QBNum = 0, QBIdx = -1;
+		double minQBCost = INF;
+		for(unsigned int i = 0; i < offsPLocSetFld.size(); ++i)
+		{
+			string pType = convertPIdToPType(int(results.at<float>(i, 0)));
+//			cout << pType << endl;
+			playersTypes.push_back(pType);
+			double cost = .0;
+			for(int k = 0; k < K; ++k)
+				//convert from pixel distance to feet(/5), then to yard(/3)
+				//dists is the square of Euclidean distance!
+				cost += sqrt(dists.at<float>(i, k)) / 15;
+			cost /= K;
+			//cout << "cost: " << cost << endl;
+			allCosts.push_back(cost);
+			if(pType == "QB")
+			{
+				++QBNum;
+				if(cost < minQBCost)
+				{
+					minQBCost = cost;
+					QBIdx = i;
+				}
+			}
+		}
+//		for(unsigned int i = 0; i < playersTypes.size(); ++i)
+//			cout << playersTypes[i] << endl;
+//		sort(allCosts.begin(), allCosts.end());
+		if(QBNum >= 2)
+		{
+			cout << "More than 1 QB!" << endl;
+			Mat trainFeaturesMatNoQB = Mat(1, 2, CV_32FC1);
+			Mat trainLabelsMatNoQB = Mat(1, 1, CV_32FC1, -1);
+			for(int i = 0; i < trainLabelsMat.rows; ++i)
+			{
+				// not QB in training set
+				if(trainLabelsMat.at<float>(i, 0) != 2)
+				{
+//					if(trainLabelsMatNoQB.rows == 1)
+					if(trainLabelsMatNoQB.at<float>(0, 0) == -1)
+					{
+//						cout << "i " << i << "trainLabelsMatNoQB.rows " << trainLabelsMatNoQB.rows << endl;
+						trainLabelsMatNoQB.at<float>(0, 0) = trainLabelsMat.at<float>(i, 0);
+//						cout << trainLabelsMat.at<float>(1, 0) << endl;
+//						cout << trainLabelsMat.at<float>(i, 0) << endl;
+						trainFeaturesMatNoQB.at<float>(0, 0) = trainFeaturesMat.at<float>(i, 0);
+						trainFeaturesMatNoQB.at<float>(0, 1) = trainFeaturesMat.at<float>(i, 1);
+					}
+					else
+					{
+//						cout << "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"<< endl;
+						vconcat(trainLabelsMatNoQB, trainLabelsMat.row(i), trainLabelsMatNoQB);
+						vconcat(trainFeaturesMatNoQB, trainFeaturesMat.row(i), trainFeaturesMatNoQB);
+					}
+				}
+			}
+			CvKNearest knnNoQB(trainFeaturesMatNoQB, trainLabelsMatNoQB, Mat(), false, K);
+
+			for(unsigned int i = 0; i < offsPLocSetFld.size(); ++i)
+			{
+				if(i == QBIdx)
+					continue;
+
+				Mat testFeaturesMatNoQB = Mat(1, 2, CV_32FC1);
+				testFeaturesMatNoQB.at<float>(0, 0) = testFeaturesMat.at<float>(i, 0);
+				testFeaturesMatNoQB.at<float>(0, 1) = testFeaturesMat.at<float>(i, 1);
+				Mat neighborResponsesNoQB(1, K, CV_32FC1);
+				Mat resultsNoQB(1, 1, CV_32FC1), distsNoQB(1, K, CV_32FC1);
+//				cout << "trainFeaturesMat" << endl << trainFeaturesMat << endl;
+//				cout << "trainLabelsMat" << endl << trainLabelsMat << endl;
+//				cout << "trainFeaturesMatNoQB" << endl << trainFeaturesMatNoQB << endl;
+//				cout << "trainLabelsMatNoQB" << endl << trainLabelsMatNoQB << endl;
+				float resultNoQB = knnNoQB.find_nearest(testFeaturesMatNoQB, K, resultsNoQB, neighborResponsesNoQB, distsNoQB);
+
+				string pType = convertPIdToPType(int(resultNoQB));
+				playersTypes[i] = pType;
+				double cost = .0;
+				for(int k = 0; k < K; ++k)
+					//convert from pixel distance to feet(/5), then to yard(/3)
+					//dists is the square of Euclidean distance!
+					cost += sqrt(distsNoQB.at<float>(0, k)) / 15;
+				cost /= K;
+				//cout << "cost: " << cost << endl;
+				allCosts[i] = cost;
+			}
+		}
+}
+
+double getUniformClrCost(const vector<struct rect> &offsPlayers, play* p)
+{
+	vector<Point3d> allUfmClrs;
+	Point3d ufmClrMean(0, 0, 0);
+	for(unsigned int i = 0; i < offsPlayers.size(); ++i)
+	{
+//		plotRect(mosFrame, players[i], Scalar(0, 0, 255));
+		Point3d ufmClr;
+		getRectAvgClr(p->mosFrame, offsPlayers[i], ufmClr);
+		ufmClrMean += ufmClr;
+		allUfmClrs.push_back(ufmClr);
+	}
+
+	ufmClrMean *= 1.0 / offsPlayers.size();
+
+	double clrCost = 0;
+	for(unsigned int i = 0; i < allUfmClrs.size(); ++i)
+		clrCost += norm(allUfmClrs[i] - ufmClrMean);
+
+	clrCost /= offsPlayers.size();
+	return clrCost;
+}
+
+double getColorDif(const Rect &r, Mat &img)
+{
+//	Mat m1(img, Rect(r.x, r.y, r.width * 0.5, r.height));
+//	Mat m2(img, Rect(r.x + r.width * 0.5, r.y, r.width * 0.5, r.height));
+//	Scalar mean1 = mean(m1);
+//	Scalar mean2 = mean(m2);
+//	double diff = 0;
+//	for(int i = 0; i < 3; ++i)
+//		diff += abs(mean1[i] - mean2[i]);
+//	return diff;
+
+	rect rLeft, rRight;
+	rLeft.a = Point2d(r.x, r.y);
+	rLeft.b = Point2d(r.x, r.y + r.height * 0.5);
+	rLeft.c = Point2d(r.x + r.width * 0.5, r.y + r.height * 0.5);
+	rLeft.d = Point2d(r.x + r.width * 0.5, r.y);
+	rRight.a = rLeft.a + Point2d(r.width * 0.5);
+	rRight.b = rLeft.b + Point2d(r.width * 0.5);
+	rRight.c = rLeft.c + Point2d(r.width * 0.5);
+	rRight.d = rLeft.d + Point2d(r.width * 0.5);
+	Point3d leftClr, rightClr;
+	getRectAvgClr(img, rLeft, leftClr);
+	getRectAvgClr(img, rRight, rightClr);
+	double diff = abs(leftClr.x - rightClr.x + leftClr.y - rightClr.y +
+			leftClr.z - rightClr.z);
+	return diff;
+}
+
+double getOrgImgColorDif(const Rect &r, Mat &img, const Mat &fldToOrgHMat)
+{
+	rect rLeft, rRight;
+	rLeft.a = Point2d(r.x, r.y);
+	rLeft.b = Point2d(r.x, r.y + r.height * 0.5);
+	rLeft.c = Point2d(r.x + r.width * 0.5, r.y + r.height * 0.5);
+	rLeft.d = Point2d(r.x + r.width * 0.5, r.y);
+	rRight.a = rLeft.a + Point2d(r.width * 0.5);
+	rRight.b = rLeft.b + Point2d(r.width * 0.5);
+	rRight.c = rLeft.c + Point2d(r.width * 0.5);
+	rRight.d = rLeft.d + Point2d(r.width * 0.5);
+	Point3d leftClr, rightClr;
+	getOrgImgRectAvgClr(img, rLeft, fldToOrgHMat, leftClr);
+	getOrgImgRectAvgClr(img, rRight, fldToOrgHMat, rightClr);
+	double diff = abs(leftClr.x - rightClr.x + leftClr.y - rightClr.y +
+			leftClr.z - rightClr.z);
+	return diff;
+}
+
+double getFgAreaRatio(const Rect &r, const Mat &img)
+{
+	double fgPixelsNum = 0;
+	for(int y = r.y; y < r.y + r.height; ++y)
+		for(int x = r.x; x < r.x + r.width; ++x)
+		{
+//			cout << "###" << endl;
+//			x = y = 1;
+//			if( y < 0 || y >= fld->fieldLength)
+//				continue;
+//			if( x < 0 || x >= fld->fieldWidth)
+//				continue;
+			const Point3_<uchar>* p = img.ptr<Point3_<uchar> >(y, x);
+			if(int(p->z) == 255)
+			{
+					++fgPixelsNum;
+			}
+		}
+//	cout << r.width * r.height << endl;
+	return (fgPixelsNum / (r.width * r.height));
+}
+
 
 
