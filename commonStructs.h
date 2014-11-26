@@ -59,21 +59,12 @@ struct yardLine
 	int index;
 };
 
-//struct track{
-//	int frameStart, frameEnd;
-//	double dist, ydist;
-//	CvPoint start, end;
-//	//int col;				//Right = 1 , Left = 2;
-//	bool lowRec, upRec;
-//
-//};
+struct track{
+	int trackId;
+	int startFrm, endFrm;
+	cv::Point2d startPos, endPos;
+};
 
-//struct track{
-//	//int trackId;
-//	int startFrm, endFrm;
-//	CvPoint startPos, endPos;
-//	bool lowRec, upRec;
-//};
 /*
  * 	a ##### d
  * 	#		#

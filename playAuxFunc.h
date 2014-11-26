@@ -119,4 +119,12 @@ double getOrgImgColorDif(const Rect &r, Mat &img, const Mat &fldToOrgHMat);
 
 double getFgAreaRatio(const Rect &r, const Mat &img);
 
+void readKltTracks(string filePath, vector<track> &trks);
+
+void transTracksFromOrgToFld(const vector<track> &trks, const Mat &orgToFldHMat, vector<track> &rectTrks);
+
+void drawKltTracks(play *p, const vector<track> &trks, const Mat &orgToFldHMat);
+
+bool isPlayerByKltTracks(const vector<track> &trks, const Point2d &pos, const Mat &orgToFldHMat);
+
 #endif

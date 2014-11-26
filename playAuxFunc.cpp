@@ -1173,7 +1173,7 @@ int convertPTypeToPId(const string &pType)
 {
 	int pId = -1;
 	if(pType.compare("WRTop") == 0 || pType.compare("WRBot") == 0
-			|| pType.compare("WRMid") == 0)
+			|| pType.compare("WRMid") == 0 || pType.compare("WR") == 0)
 		pId = 1;
 	if(pType.compare("QB") == 0)
 		pId = 2;
@@ -1432,6 +1432,110 @@ double getFgAreaRatio(const Rect &r, const Mat &img)
 		}
 //	cout << r.width * r.height << endl;
 	return (fgPixelsNum / (r.width * r.height));
+}
+
+void readKltTracks(string filePath, vector<track> &trks)
+{
+	ifstream fin(filePath.c_str());
+
+	if(!fin.is_open())
+	{
+		cout << "Can't open file " << filePath << endl;
+		return;
+	}
+
+	fin.seekg(0, ios::end);
+	if (fin.tellg() == 0) {
+		cout << "Empty file " << filePath << endl;
+		return;
+	}
+	fin.seekg(0, ios::beg);
+	while(!fin.eof())
+	{
+		track t;
+		t.startFrm = -1;
+		fin >> t.startFrm >> t.endFrm >> t.startPos.x >> t.startPos.y;
+		fin >> t.endPos.x >> t.endPos.y;
+		if(t.startFrm == -1)
+			break;
+		trks.push_back(t);
+	}
+	fin.close();
+}
+
+void transTracksFromOrgToFld(const vector<track> &trks, const Mat &orgToFldHMat, vector<track> &rectTrks)
+{
+	rectTrks.resize(trks.size());
+	vector<Point2d> srcVec, dstVec;
+	for(unsigned int i = 0; i < trks.size(); ++i)
+	{
+		srcVec.push_back(trks[i].startPos);
+		srcVec.push_back(trks[i].endPos);
+	}
+	perspectiveTransform(srcVec, dstVec, orgToFldHMat);
+	for(unsigned int i = 0; i < rectTrks.size(); ++i)
+	{
+		rectTrks[i].startPos = dstVec[2 * i];
+		rectTrks[i].endPos = dstVec[2 * i + 1];
+	}
+}
+void drawKltTracks(play *p, const vector<track> &trks, const Mat &orgToFldHMat)
+{
+	vector<track> rectTrks;
+//	vector<Point2d> srcVec, dstVec;
+//	for(unsigned int i = 0; i < trks.size(); ++i)
+//	{
+//		srcVec.push_back(trks[i].startPos);
+//		srcVec.push_back(trks[i].endPos);
+//	}
+//	perspectiveTransform(srcVec, dstVec, orgToFldHMat);
+//	for(unsigned int i = 0; i < rectTrks.size(); ++i)
+//	{
+//		rectTrks[i].startPos = dstVec[2 * i];
+//		rectTrks[i].endPos = dstVec[2 * i + 1];
+//	}
+	transTracksFromOrgToFld(trks, orgToFldHMat, rectTrks);
+
+//	int fontFace = 0;
+//	double fontScale = 1;
+	int thickness = 2;
+	Scalar clr = CV_RGB(0, 255, 255);
+	for(unsigned int i = 0; i < trks.size(); ++i)
+	{
+		line(p->mosFrame, trks[i].startPos, trks[i].endPos, clr, 1, 8, 0);
+		circle(p->mosFrame, trks[i].endPos, 1, clr, thickness);
+		line(p->rectMosFrame, rectTrks[i].startPos, rectTrks[i].endPos, clr, 1, 8, 0);
+		circle(p->rectMosFrame, rectTrks[i].endPos, 1, clr, thickness);
+	}
+
+}
+
+bool isPlayerByKltTracks(const vector<track> &trks, const Point2d &pos, const Mat &orgToFldHMat)
+{
+	vector<track> rectTrks;
+	transTracksFromOrgToFld(trks, orgToFldHMat, rectTrks);
+
+	int len = 30;
+	double totalTrkLen = 0;
+	for(unsigned int i = 0; i < rectTrks.size(); ++i)
+	{
+		Point2d mid = 0.5 * (rectTrks[i].startPos + rectTrks[i].endPos);
+//		Point2d mid = rectTrks[i].startPos;
+//		cout << "mid.x " << mid.x << "mid.y " << mid.y << endl;
+//		cout << "pos.x " << pos.x << "pos.y " << pos.y << endl;
+		if((mid.x >= pos.x - len) && (mid.x <= pos.x + len) &&
+				(mid.y >= pos.y - len) && (mid.y <= pos.y + len))
+		{
+			double trkLen = norm(rectTrks[i].endPos - rectTrks[i].startPos);
+			if(trkLen >= 5)
+				totalTrkLen += trkLen;
+		}
+	}
+//	cout << "totalTrkLen " << totalTrkLen << endl;
+	int ratio = 0.5;
+	if(totalTrkLen > 2 * len * ratio)
+		return true;
+	return false;
 }
 
 

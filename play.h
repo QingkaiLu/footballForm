@@ -113,11 +113,20 @@ public:
 	void labelPlayersAngle(direction offSide);
 
 	void getPlayersToLosVecs(vector<Point2d> &pToLosVec, vector<int> &pTypesId);
+	void getPlayersLosPos(vector<Point2d> &positions, vector<string> &pTypes);
+	void savePlayersLosPos(const vector<Point2d> &positions, const vector<string> &pTypes);
 	void lablePTypesKnnFixedLosCnt(direction offSide, const Mat &trainFeaturesMat, const Mat &trainLabelsMat);
 	void lablePTypesKnnVarLosCnts(direction offSide, const Mat &trainFeaturesMat, const Mat &trainLabelsMat);
+	void lablePTypesKnnVarLosCnts(direction offSide, const Mat &trainFeaturesMat,
+			const Mat &trainLabelsMat, vector<string> &bestPlayersTypes, vector<struct rect> &bestPlayers,
+			vector<Point2d> &bestPlayersLocSet, vector<Point2d> &bestPLocSetFld, Mat &fldToOrgHMat, Mat &orgToFldHMat);
 //	void lablePTypesKnnVarLosCnts2(direction offSide, const Mat &trainFeaturesMat, const Mat &trainLabelsMat);
 	void getLosBndBoxByUfmClr();
 	void getLosBndBoxByClrAndFg();
+	// find closest formation to infer missing players area
+	void inferMissingPlayers(direction offSide, const Mat &trainFeaturesMat, const Mat &trainLabelsMat,
+			const vector<vector<Point2d> > &pToLosVecAllPlays, const vector<vector<int> > &pTypesIdAllPlays);
+	void drawKlt(Mat &orgToFldHMat);
 
 public:
 	struct playId pId;
