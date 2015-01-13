@@ -75,11 +75,11 @@ void detectForm(const vector<int> &games, const vector<int> &gamesFld)
 
 		readOdLabels(odLabelFilePath, pIds, dirs, odLabels);
 
-		cout << "Detect formations of Game" << gameIdStr << "..."<< endl;
+//		cout << "Detect formations of Game" << gameIdStr << "..."<< endl;
 
 		for(unsigned int i = 0; i < pIds.size(); ++i)
 		{
-//			if(pIds[i].vidId != 13)
+//			if(pIds[i].vidId != 2)
 //				continue;
 			play *p = NULL;
 			cout << "gameId: " << pIds[i].gameId << " vidId: " << pIds[i].vidId << endl;
@@ -101,11 +101,70 @@ void detectForm(const vector<int> &games, const vector<int> &gamesFld)
 //			p->labelPlayersAngleGt();
 //			p->labelPlayersAngle(offSide);
 //			p->getLosBndBoxByUfmClr();
-			p->getLosBndBoxByClrAndFg();
+//			p->getLosBndBoxByClrAndFg();
+//			if(!p->getPlayersFromFg().empty())
+//				cout << pIds[i].gameId << " " << pIds[i].vidId << endl;
+			p->genFilledNewFg();
+			p->getPlayersFromFg();
+			p->transPlayersFgToFld();
 		}
 	}
 }
 
+
+void computeRectLosCntGt(const vector<int> &games, const vector<int> &gamesFld)
+{
+	for(unsigned int g = 0; g < games.size(); ++g)
+	{
+
+		int gameId = games[g];
+		ostringstream convertGameId;
+		convertGameId << gameId ;
+		string gameIdStr = convertGameId.str();
+
+		if(gameId < 10)
+			gameIdStr = "0" + gameIdStr;
+
+		string odLabelFilePath = "randTreesTrainData/odPlays/odGame" + gameIdStr + "Rect";
+//		string odLabelFilePath = "randTreesTrainData/odPlays/odGame" + gameIdStr + "RectForm";
+		vector<playId> pIds;
+		vector<string> dirs, odLabels;
+
+		readOdLabels(odLabelFilePath, pIds, dirs, odLabels);
+
+//		cout << "Detect formations of Game" << gameIdStr << "..."<< endl;
+
+		for(unsigned int i = 0; i < pIds.size(); ++i)
+		{
+//			if(pIds[i].vidId != 13)
+//				continue;
+			play *p = NULL;
+//			cout << "gameId: " << pIds[i].gameId << " vidId: " << pIds[i].vidId << endl;
+			if (p != NULL)
+				delete p;
+			p = new play(pIds[i], gamesFld[g]);
+//			direction offSide;
+//			if(odLabels[i] == "o")
+//				offSide = leftDir;
+//			else if(odLabels[i] == "d")
+//				offSide = rightDir;
+//			else
+//			{
+//				cout << "Wrong od labels!" << endl;
+//				return;
+//			}
+//			p->detectForms(offSide);
+//			p->detectFormsGt(offSide);
+//			p->labelPlayersAngleGt();
+//			p->labelPlayersAngle(offSide);
+//			p->getLosBndBoxByUfmClr();
+//			p->getLosBndBoxByClrAndFg();
+			p->getLosCntGt();
+			p->computeRectLosCntGt();
+			cout << pIds[i].vidId << " " << p->rectLosCntGt.x << " " << p->rectLosCntGt.y << endl;
+		}
+	}
+}
 
 void getPTypesLearningSamples(const vector<int> &games, const vector<int> &gamesFld,
 		Mat &trainFeaturesMat, Mat &trainLabelsMat)
@@ -136,6 +195,7 @@ void getPTypesLearningSamples(const vector<int> &games, const vector<int> &games
 		{
 			play *p = NULL;
 			cout << "gameId: " << pIds[i].gameId << " vidId: " << pIds[i].vidId << endl;
+//			cout<< pIds[i].vidId << " ";
 			if (p != NULL)
 				delete p;
 			p = new play(pIds[i], gamesFld[g]);
@@ -336,13 +396,10 @@ void inferMissPlayersAllPlays(vector<int> &games, vector<int> &gamesFld,
 		}
 	}
 }
+
 //int main()
-////int detectFormMain()
+////int detectForm()
 //{
-////    if(system("touch hi.txt")) cout<<"not done";
-////    if(system("cd ../hungarian")) cout<<"not done";
-////    if(system("./../hungarian/hungarian -v 0 -i scoreMat2")) cout<<"not done";
-////	if(system("./../hungarian/hungarian -v 0 -i Hungarian/score.mat")) cout << " not done";
 //	vector<int> games;
 //	vector<int> gamesFld;
 //	games.push_back(2);
@@ -354,41 +411,19 @@ void inferMissPlayersAllPlays(vector<int> &games, vector<int> &gamesFld,
 ////	games.push_back(9);
 ////	gamesFld.push_back(2);
 //
-////	vector<playerTypeId> pTypeIds;
-////	pTypeIds.push_back(upWR);
-////	pTypeIds.push_back(lowWR);
-////	pTypeIds.push_back(runBack);
-////	detectForm(games, gamesFld, pTypeIds);
+////	Mat trainFeaturesMat, trainLabelsMat;
+////	getPTypesLearningSamples(games, gamesFld, trainFeaturesMat, trainLabelsMat);
+////	lablePTypesKNN(games, gamesFld, trainFeaturesMat, trainLabelsMat);
 //
-//	detectForm(games, gamesFld);
+////	vector<vector<Point2d> > pToLosVecAllPlays;
+////	vector<vector<int> > pTypesIdAllPlays;
+////	getFormLearningSamples(games, gamesFld, pToLosVecAllPlays, pTypesIdAllPlays);
+////	inferMissPlayersAllPlays(games, gamesFld, trainFeaturesMat, trainLabelsMat, pToLosVecAllPlays, pTypesIdAllPlays);
+//
+////	detectForm(games, gamesFld);
+////	computeRectLosCntGt(games, gamesFld);
+//
+////	saveExemplarForms(games, gamesFld);
 //
 //	return 1;
 //}
-
-int main()
-{
-	vector<int> games;
-	vector<int> gamesFld;
-	games.push_back(2);
-	gamesFld.push_back(1);
-//	games.push_back(8);
-//	gamesFld.push_back(1);
-//	games.push_back(10);
-//	gamesFld.push_back(1);
-//	games.push_back(9);
-//	gamesFld.push_back(2);
-	Mat trainFeaturesMat, trainLabelsMat;
-	getPTypesLearningSamples(games, gamesFld, trainFeaturesMat, trainLabelsMat);
-//	lablePTypesKNN(games, gamesFld, trainFeaturesMat, trainLabelsMat);
-
-	vector<vector<Point2d> > pToLosVecAllPlays;
-	vector<vector<int> > pTypesIdAllPlays;
-	getFormLearningSamples(games, gamesFld, pToLosVecAllPlays, pTypesIdAllPlays);
-//	inferMissPlayersAllPlays(games, gamesFld, trainFeaturesMat, trainLabelsMat, pToLosVecAllPlays, pTypesIdAllPlays);
-
-//	detectForm(games, gamesFld);
-
-//	saveExemplarForms(games, gamesFld);
-
-	return 1;
-}

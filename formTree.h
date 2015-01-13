@@ -26,10 +26,6 @@ public:
 
 	formTree(std::string formFile, direction offSide);
 	void setupFormTree(const std::string &formFile, direction offSide);
-//	void setOLAsRoot();
-//	void sortParts();
-//	void setupAllPartsLocSet(std::vector<std::vector<cv::Point2d> >);
-//	void setupPartLocSet(struct part &p, std::vector<cv::Point2d>);
 	void setupPartsLocSetStarModel(const cv::Point2d &rectLosCnt,
 			const std::vector<cv::Point2d> &pLocSetFld, const std::vector<double> &score);
 	void findBestFormStarModel();
@@ -37,10 +33,6 @@ public:
 			const std::vector<cv::Point2d> &pLocSetFld);
 	void setupPartsLocSetHungarian(const std::vector<cv::Point2d> &olLocSet,
 			const std::vector<cv::Point2d> &pLocSetFld);
-
-//	void setupPartsLocSetHungarian(const std::vector<cv::Point2d> &olLocSet,
-//			const std::vector<cv::Point2d> &pLocSetFld, const std::vector<double> &scores);
-
 	void getScoreMat(std::string outputFile);
 	void getScoreMat(std::string outputFile, double &minScore);
 	void findBestFormHungarian(std::string outputFile);

@@ -9,9 +9,12 @@ void computeOdSpPmdPKernel(const std::vector<int> &games);
 double computeTwoFVecKernel(const std::vector<double> &fVec1, const std::vector<double> &fVec2);
 
 void computeOdFeatsSvm(const std::vector<int> &games);
+void computeOffsFeats(const std::vector<int> &games);
 
 void computeOdConcaFOverallExpSvm(const std::vector<int> &games);
 
 void computeOdFeatsIndRspSvm(const std::vector<int> &games, int fMode);
+
+void computeOffsSpPmdKernel(const std::vector<int> &games);
 
 #endif

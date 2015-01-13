@@ -217,7 +217,8 @@ int picWr()
 //					leftTeam = "d";
 //				else if(p.trueDir == rightDir)
 //					leftTeam = "o";
-//				foutOdPIds << p.pId.gameId << " " << p.pId.vidId << " l " << leftTeam << endl;
+////				foutOdPIds << p.pId.gameId << " " << p.pId.vidId << " l " << leftTeam << endl;
+//				foutOdPIds << p.pId.gameId << " " << p.pId.vidId << endl;
 //			}
 //		}
 //		foutOdPIds.close();

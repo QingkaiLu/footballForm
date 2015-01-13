@@ -1520,9 +1520,6 @@ bool isPlayerByKltTracks(const vector<track> &trks, const Point2d &pos, const Ma
 	for(unsigned int i = 0; i < rectTrks.size(); ++i)
 	{
 		Point2d mid = 0.5 * (rectTrks[i].startPos + rectTrks[i].endPos);
-//		Point2d mid = rectTrks[i].startPos;
-//		cout << "mid.x " << mid.x << "mid.y " << mid.y << endl;
-//		cout << "pos.x " << pos.x << "pos.y " << pos.y << endl;
 		if((mid.x >= pos.x - len) && (mid.x <= pos.x + len) &&
 				(mid.y >= pos.y - len) && (mid.y <= pos.y + len))
 		{
@@ -1531,11 +1528,50 @@ bool isPlayerByKltTracks(const vector<track> &trks, const Point2d &pos, const Ma
 				totalTrkLen += trkLen;
 		}
 	}
-//	cout << "totalTrkLen " << totalTrkLen << endl;
 	int ratio = 0.5;
 	if(totalTrkLen > 2 * len * ratio)
 		return true;
 	return false;
+}
+
+
+Mat fillHoles(const Mat &image)
+{
+	cv::Mat image_thresh;
+	cv::threshold(image, image_thresh, 125, 255, cv::THRESH_BINARY);
+
+	// Loop through the border pixels and if they're black, floodFill from there
+	cv::Mat mask;
+	image_thresh.copyTo(mask);
+	for (int i = 0; i < mask.cols; i++) {
+		if (mask.at<char>(0, i) == 0) {
+			cv::floodFill(mask, cv::Point(i, 0), 255, 0, 10, 10);
+		}
+		if (mask.at<char>(mask.rows-1, i) == 0) {
+			cv::floodFill(mask, cv::Point(i, mask.rows-1), 255, 0, 10, 10);
+		}
+	}
+	for (int i = 0; i < mask.rows; i++) {
+		if (mask.at<char>(i, 0) == 0) {
+			cv::floodFill(mask, cv::Point(0, i), 255, 0, 10, 10);
+		}
+		if (mask.at<char>(i, mask.cols-1) == 0) {
+			cv::floodFill(mask, cv::Point(mask.cols-1, i), 255, 0, 10, 10);
+		}
+	}
+
+
+	// Compare mask with original.
+	cv::Mat newImage;
+	image.copyTo(newImage);
+	for (int row = 0; row < mask.rows; ++row) {
+		for (int col = 0; col < mask.cols; ++col) {
+			if (mask.at<char>(row, col) == 0) {
+				newImage.at<char>(row, col) = 255;
+			}
+		}
+	}
+	return newImage;
 }
 
 

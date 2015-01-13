@@ -127,4 +127,6 @@ void drawKltTracks(play *p, const vector<track> &trks, const Mat &orgToFldHMat);
 
 bool isPlayerByKltTracks(const vector<track> &trks, const Point2d &pos, const Mat &orgToFldHMat);
 
+Mat fillHoles(const Mat &image);
+
 #endif

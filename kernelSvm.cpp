@@ -157,6 +157,85 @@ void computeOdSpPmdPKernel(const vector<int> &games)
 	fout.close();
 }
 
+void computeOffsSpPmdKernel(const vector<int> &games)
+{
+	cout << "Computing offense spatial pyramid feature kernel..."<< endl;
+
+	vector<vector<double> > fVecPlaysAllGames;
+	vector<double> odLabelsAllGames;
+	for(unsigned int g = 0; g < games.size(); ++g)
+	{
+		vector<string> offFeatFiles;
+		int gameId = games[g];
+		ostringstream convertGameId;
+		convertGameId << gameId ;
+		string gameIdStr = convertGameId.str();
+
+		if(gameId < 10)
+			gameIdStr = "0" + gameIdStr;
+
+		string offFeatFile = "offsFeats/Game" + gameIdStr + "/offFeats";
+		offFeatFiles.push_back(offFeatFile);
+		vector<vector<double> > fVecPlays;
+		vector<double> odLabels;
+
+		readOdFeatData(offFeatFiles, fVecPlays, odLabels, fNumPerPlayOneSide);
+
+		for(unsigned int i = 0; i < fVecPlays.size(); ++i)
+			fVecPlaysAllGames.push_back(fVecPlays[i]);
+		for(unsigned int i = 0; i < odLabels.size(); ++i)
+			odLabelsAllGames.push_back(odLabels[i]);
+
+	}
+
+	//normlization
+	for(unsigned int i = 0; i < fVecPlaysAllGames.size(); ++i)
+	{
+		vector<double> fVecOnePlay = fVecPlaysAllGames[i];
+		double maxFVal = .0;
+		for(unsigned int j = 0; j < fVecPlaysAllGames.size(); ++j)
+				maxFVal += fVecOnePlay[j];
+		if(maxFVal != 0)
+		{
+			for(unsigned int j = 0; j < fVecPlaysAllGames.size(); ++j)
+			{
+				fVecPlaysAllGames[i][j] /= maxFVal;
+				fVecPlaysAllGames[i][j] /= maxFVal;
+			}
+		}
+
+
+	}
+
+	vector<vector<double> > kernels;
+	for(unsigned int i = 0; i < fVecPlaysAllGames.size(); ++i)
+	{
+		vector<double> kerVec;
+		for(unsigned int j = 0; j < fVecPlaysAllGames.size(); ++j)
+		{
+			if(j >= i)
+			{
+				double k = computeTwoFVecKernel(fVecPlaysAllGames[i], fVecPlaysAllGames[j]);
+				kerVec.push_back(k);
+			}
+			else
+				kerVec.push_back(kernels[j][i]);
+		}
+		kernels.push_back(kerVec);
+	}
+
+	string kernelPath = "offsFeats/spPymKernels";
+	ofstream fout(kernelPath.c_str());
+	for(unsigned int i = 0; i < fVecPlaysAllGames.size(); ++i)
+	{
+		for(unsigned int j = 0; j < fVecPlaysAllGames.size(); ++j)
+			fout << kernels[i][j] << " ";
+		fout << endl << endl;
+	}
+
+	fout.close();
+}
+
 void computeOdFeatsSvm(const vector<int> &games)
 {
 	cout << "Computing feature vectors for SVM..." << endl;
@@ -224,6 +303,10 @@ void computeOdFeatsSvm(const vector<int> &games)
 
 	fout.close();
 
+}
+
+void computeOffsFeats(const std::vector<int> &games)
+{
 }
 
 void computeOdConcaFOverallExpSvm(const vector<int> &games)
@@ -424,22 +507,27 @@ void computeOdFeatsIndRspSvm(const vector<int> &games, int fMode)
 }
 
 
-//int main()
-int kernelSvm()
+int main()
+//int kernelSvm()
 {
 	vector<int> games;
 	games.push_back(2);
-	games.push_back(8);
-	games.push_back(9);
-	games.push_back(10);
+//	games.push_back(8);
+//	games.push_back(9);
+//	games.push_back(10);
+	vector<int> gamesFld;
+	gamesFld.push_back(1);
 
 //	int expMode = 0;
 //	computeLeftRightFeats(games, expMode);
 
-	computeOdSpPmdPKernel(games);
-	computeOdFeatsSvm(games);
+//	computeOdSpPmdPKernel(games);
+//	computeOdFeatsSvm(games);
+
 //	computeOdConcaFOverallExpSvm(games);
 //	computeOdFeatsIndRspSvm(games, 2);
+//	computeOffsFeats(games, gamesFld);
+	computeOffsSpPmdKernel(games);
 
 	return 1;
 }

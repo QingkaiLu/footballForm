@@ -70,26 +70,14 @@ bool readOdFeatData(const vector<string> &fileNames, vector<vector<double> > &fe
 		fin.seekg(0, ios::beg);
 		while(!fin.eof())
 		{
-//			string tmp;
-//			fin >> tmp;
-//			if(tmp.empty())
-//			{
-//				break;
-//			}
 			char oneLabel, comma;
 			fin >> oneLabel >> comma;
 
 			vector<double> featuresOneSample;
 			bool fileEnd = false;
-//			for(int j = 0; j < fNumPerPlayOneSide; ++j)
 			for(int j = 0; j < featureNum; ++j)
 			{
 				double oneFeature = NEGINF;
-//				if(j < (fNumPerPlayOneSide - 1) )
-//					fin >> oneFeature >> comma;
-//				else
-//					fin >> oneFeature;
-//				featuresOneSample.push_back(oneFeature);
 				fin >> oneFeature >> comma;
 				featuresOneSample.push_back(oneFeature);
 				if(oneFeature == NEGINF)
@@ -104,12 +92,6 @@ bool readOdFeatData(const vector<string> &fileNames, vector<vector<double> > &fe
 
 			labels.push_back(double(oneLabel));
 			features.push_back(featuresOneSample);
-//			cout << oneLabel << " ";
-//			for(int j = 0; j < fNumPerPlayOneSide; ++j)
-//			{
-//				cout << featuresOneSample[j] << " ";
-//			}
-//			cout << endl;
 
 		}
 
@@ -227,18 +209,13 @@ void extracOdVidFeatsRts(int gameId, vector<playId> &pIds)
 
 	if(gameId < 10)
 		gameIdStr = "0" + gameIdStr;
-//	string odPIdsPath = "odGame" + gameIdStr;
-
-//	string odLabelFilePath = "randTreesTrainData/odGame" + gameIdStr;
 	string odLabelFilePath = "randTreesTrainData/odPlays/odGame" + gameIdStr + "Rect";
-//	vector<playId> pIds;
 	vector<string> dirs, odLabels;
 
 	readOdLabels(odLabelFilePath, pIds, dirs, odLabels);
 
 	cout << "Computing feature vectors... " << endl;
 
-	//string featuresFile = "randTreesTrainData/featureVecsGame" + gameIdStr;
 	string featuresFile = "randTreesTrainData/features/featuresGame" + gameIdStr + "Rect";
 	ofstream fout(featuresFile.c_str());
 	vector<CvSize> gridSizes;
@@ -257,24 +234,13 @@ void extracOdVidFeatsRts(int gameId, vector<playId> &pIds)
 		p->setUp();
 
 		direction d = nonDir;
-//		p->extractOdGridsFeature(d, fVecOnePlay);
 		d = leftDir;
-		//p->extractOdStripsFeature(d, fVecOnePlayLeft);
-//		p->extractOdStripsFeatRect(d, fVecOnePlayLeft);
-//		p->extractOdGridsFeatRect(d, fVecOnePlayLeft);
 		p->extractOdGridsFeatRect(d, fVecOnePlayLeft, gridSizes, gridsNum, 0);
-		//p->extractOdStripsFeatFldCrd(d, fVecOnePlayLeft);
-		//p->extractOdGridsFeatFldCrd(d, fVecOnePlayLeft);
 		delete p;
 		p = new play(pIds[i]);
 		p->setUp();
 		d = rightDir;
-		//p->extractOdStripsFeature(d, fVecOnePlayRight);
-//		p->extractOdStripsFeatRect(d, fVecOnePlayRight);
-//		p->extractOdGridsFeatRect(d, fVecOnePlayRight);
 		p->extractOdGridsFeatRect(d, fVecOnePlayRight, gridSizes, gridsNum, 0);
-		//p->extractOdStripsFeatFldCrd(d, fVecOnePlayRight);
-		//p->extractOdGridsFeatFldCrd(d, fVecOnePlayRight);
 		for(unsigned int j = 0; j < fVecOnePlayLeft.size(); ++j)
 			fVecOnePlay.push_back(fVecOnePlayLeft[j] - fVecOnePlayRight[j]);
 
@@ -283,18 +249,6 @@ void extracOdVidFeatsRts(int gameId, vector<playId> &pIds)
 		for(unsigned int j = 0; j < fVecOnePlay.size(); ++j)
 			if(abs(fVecOnePlay[j]) > maxFVal)
 				maxFVal = abs(fVecOnePlay[j]);
-//		if(maxFVal != 0)
-//		{
-//			for(unsigned int j = 0; j < (fVecOnePlay.size() - 1); ++j)
-//				fout << (fVecOnePlay[j] + 0.0) /  (maxFVal + 0.0) << ",";
-//			fout << (fVecOnePlay[fVecOnePlay.size() - 1] + 0.0)  /  (maxFVal + 0.0);
-//		}
-//		else
-//		{
-//			for(unsigned int j = 0; j < (fVecOnePlay.size() - 1); ++j)
-//				fout << (fVecOnePlay[j] + 0.0) << ",";
-//			fout << (fVecOnePlay[fVecOnePlay.size() - 1] + 0.0);
-//		}
 
 		if(maxFVal != 0)
 		{
@@ -318,16 +272,6 @@ void extracOdVidFeatsRts(int gameId, vector<playId> &pIds)
 void setUpGrids(vector<CvSize> &gridSizes, vector<Point2i> &gridsNum, int fldModel)
 {
 	fieldModel fldMod(fldModel);
-//	gridSizes.push_back(cvSize(YardLinesDist * 6, YardLinesDist * 8));
-//	gridsNum.push_back(Point2i(1, 2));
-//	gridSizes.push_back(cvSize(YardLinesDist * 2, YardLinesDist * 2));
-//	gridsNum.push_back(Point2i(3, 8));
-//	gridSizes.push_back(cvSize(YardLinesDist, YardLinesDist));
-//	gridsNum.push_back(Point2i(6, 16));
-
-//	gridSizes.push_back(cvSize(YardLinesDist * 8, YardLinesDist * 8 * 2));
-//	gridsNum.push_back(Point2i(1, 1));
-
 	gridSizes.push_back(cvSize(fldMod.yardLinesDist * 8, fldMod.yardLinesDist * 8));
 	gridsNum.push_back(Point2i(1, 2));
 	gridSizes.push_back(cvSize(fldMod.yardLinesDist * 4, fldMod.yardLinesDist * 4));
@@ -337,137 +281,10 @@ void setUpGrids(vector<CvSize> &gridSizes, vector<Point2i> &gridsNum, int fldMod
 	gridSizes.push_back(cvSize(fldMod.yardLinesDist, fldMod.yardLinesDist));
 	gridsNum.push_back(Point2i(8, 16));
 
-//	gridSizes.push_back(cvSize(YardLinesDist * 3, YardLinesDist * 4));
-//	gridsNum.push_back(Point2i(1, 1));
-//	gridSizes.push_back(cvSize(YardLinesDist * 1.5, YardLinesDist * 2));
-//	gridsNum.push_back(Point2i(2, 2));
-//	gridSizes.push_back(cvSize(YardLinesDist * 1, YardLinesDist * 1));
-//	gridsNum.push_back(Point2i(3, 4));
-//	gridSizes.push_back(cvSize(YardLinesDist * 0.5, YardLinesDist * 0.5));
-//	gridsNum.push_back(Point2i(6, 8));
-
-//	gridSizes.push_back(cvSize(YardLinesDist * 3, YardLinesDist * 2));
-//	gridsNum.push_back(Point2i(1, 1));
-//	gridSizes.push_back(cvSize(YardLinesDist * 1, YardLinesDist * 0.5));
-//	gridsNum.push_back(Point2i(3, 2));
-//	gridSizes.push_back(cvSize(YardLinesDist * 0.5, YardLinesDist * 0.25));
-//	gridsNum.push_back(Point2i(6, 4));
-
 }
-
-//void plotOdExp(const vector<vector<int> > &fVecOPlaysExp,
-//		const vector<vector<int> > &fVecDPlaysExp,
-//		const vector<CvSize> &gridSizes, const vector<Point2i> &gridsNum)
-//{
-////	Mat fld(FieldLength, FieldWidth, CV_32FC3);
-////	drawFieldModel(fld);
-////
-////	vector<rect> scanRects;
-////	Point2d rectScrimCnt = Point2d(FieldWidth / 2.0, FieldLength / 2.0);
-//	Point2d rectScrimCnt = Point2d(FieldWidth / 2.0, FieldLength);
-//
-//	int d = 0;
-//	direction dir = leftDir;
-//	if(dir == leftDir)
-//	{
-//		d = -1;
-//	}
-//	else if (dir == rightDir)
-//	{
-//		d = 1;
-//	}
-//	else
-//		return;
-//
-//	int gridsIdx = 0;
-//	for(unsigned int k = 0; k < gridSizes.size(); ++k)
-//		{
-//			int gridsIdOneLevel = 0;
-//			vector<rect> scanRectsOneLevel;
-//			vector<int> zerosVec(gridsNum[k].x * gridsNum[k].y, 0);
-//			vector<vector<int> > fVecOPlaysExpOneLevel(losCntBins, zerosVec), fVecDPlaysExpOneLevel(losCntBins, zerosVec);
-//
-//			for(int i = 0; i < gridsNum[k].x; ++i)
-//			{
-//				double maxYardLnXCoord, minYardLnXCoord;
-//
-//				if(dir == rightDir)
-//				{
-//					maxYardLnXCoord = rectScrimCnt.x + d * (i + 1) * gridSizes[k].width;
-//					minYardLnXCoord = rectScrimCnt.x + d * i * gridSizes[k].width;
-//				}
-//				else
-//				{
-//					maxYardLnXCoord = rectScrimCnt.x + d * i * gridSizes[k].width;
-//					minYardLnXCoord = rectScrimCnt.x + d * (i + 1) * gridSizes[k].width;
-//				}
-//
-//				for(int j = -0.5 * gridsNum[k].y; j < gridsNum[k].y * 0.5; ++j)
-//				{
-//					struct rect scanR;
-//
-//		//			double lowY = rectScrimCnt.y + j * (FieldLength / 10.0);
-//		//			double upY = rectScrimCnt.y + (j + 1) * (FieldLength / 10.0);
-//					double lowY = rectScrimCnt.y + j * gridSizes[k].height;
-//					double upY = rectScrimCnt.y + (j + 1) * gridSizes[k].height;
-//		//			cout << "lowY: " << lowY << endl;
-//		//			cout << "upY: " << upY << endl;
-//					scanR.a = Point2d(minYardLnXCoord, lowY);
-//					scanR.b = Point2d(minYardLnXCoord, upY);
-//					scanR.c = Point2d(maxYardLnXCoord, upY);
-//					scanR.d = Point2d(maxYardLnXCoord, lowY);
-//
-//					scanRectsOneLevel.push_back(scanR);
-//					for(unsigned int i = 0; i < fVecOPlaysExp.size(); ++i)
-//					{
-//						fVecOPlaysExpOneLevel[i][gridsIdOneLevel] = fVecOPlaysExp[i][gridsIdx];
-//						fVecDPlaysExpOneLevel[i][gridsIdOneLevel] = fVecDPlaysExp[i][gridsIdx];
-//					}
-//
-//					++gridsIdOneLevel;
-//					++gridsIdx;
-//
-//				}
-//			}
-//
-//			ostringstream convertLev;
-//			convertLev << k;
-//			string levStr = convertLev.str();
-//
-//			for(unsigned int i = 0; i < fVecOPlaysExpOneLevel.size(); ++i)
-//			{
-//				Mat fld(2.0 * FieldLength, FieldWidth, CV_32FC3);
-//				fld = Scalar(0,0,0);
-//				//drawFieldModel(fld);
-//				ostringstream convertIdx;
-//				convertIdx << i;
-//				string idxStr = convertIdx.str();
-//				plotScanLines(fld, scanRectsOneLevel, fVecOPlaysExpOneLevel[i]);
-//				string plotPath = "ExpPlots/expOLos" + idxStr + "lev" + levStr + ".jpg";
-//				imwrite(plotPath, fld);
-//			}
-//
-//			for(unsigned int i = 0; i < fVecDPlaysExpOneLevel.size(); ++i)
-//			{
-//				Mat fld(2.0 * FieldLength, FieldWidth, CV_32FC3);
-//				fld = Scalar(0,0,0);
-//				//drawFieldModel(fld);
-//				ostringstream convertIdx;
-//				convertIdx << i;
-//				string idxStr = convertIdx.str();
-//				plotScanLines(fld, scanRectsOneLevel, fVecDPlaysExpOneLevel[i]);
-//				string plotPath = "ExpPlots/expDLos" + idxStr + "lev" + levStr + ".jpg";
-//				imwrite(plotPath, fld);
-//			}
-//		}
-//
-//}
 
 void computeLeftRightFeats(const vector<int> &games, int expMode, const vector<int> &gamesFld)
 {
-//	vector<CvSize> gridSizes;
-//	vector<Point2i> gridsNum;
-//	setUpGrids(gridSizes, gridsNum, 1);
 
 	for(unsigned int g = 0; g < games.size(); ++g)
 	{
@@ -498,16 +315,6 @@ void computeLeftRightFeats(const vector<int> &games, int expMode, const vector<i
 		ofstream foutLeft(leftFeatFile.c_str());
 		ofstream foutRight(rightFeatFile.c_str());
 		ofstream foutLosIds(losCntIdsFile.c_str());
-//		vector<CvSize> gridSizes;
-//		vector<Point2i> gridsNum;
-//		gridSizes.push_back(cvSize(YardLinesDist * 6, YardLinesDist * 8));
-//		gridsNum.push_back(Point2i(1, 2));
-//		gridSizes.push_back(cvSize(YardLinesDist * 2, YardLinesDist * 2));
-//		gridsNum.push_back(Point2i(3, 8));
-//		gridSizes.push_back(cvSize(YardLinesDist, YardLinesDist));
-//		gridsNum.push_back(Point2i(6, 16));
-
-//		setFldModel(1);
 
 		//compute feature vector for each play with all models
 		for(unsigned int i = 0; i < pIds.size(); ++i)
@@ -523,17 +330,12 @@ void computeLeftRightFeats(const vector<int> &games, int expMode, const vector<i
 			direction d = nonDir;
 			d = leftDir;
 			p->extractOdGridsFeatRect(d, fVecOnePlayLeft, gridSizes, gridsNum, expMode);
-//			p->extOdGridsFeatFldCrdOrigImg(d, fVecOnePlayLeft, gridSizes, gridsNum, expMode);
-//			p->extractOdGridsFeatRectIndRsp(d, fVecOnePlayLeft, gridSizes, gridsNum);
 
 			delete p;
 			p = new play(pIds[i], gamesFld[g]);
 			p->setUp();
 			d = rightDir;
 			p->extractOdGridsFeatRect(d, fVecOnePlayRight, gridSizes, gridsNum, expMode);
-//			p->extOdGridsFeatFldCrdOrigImg(d, fVecOnePlayRight, gridSizes, gridsNum, expMode);
-//			p->extractOdGridsFeatRectIndRsp(d, fVecOnePlayRight, gridSizes, gridsNum);
-			//p->writeMatchPnts();
 
 			int losCntIdx = p->getLosCntIdx();
 			foutLosIds << losCntIdx << endl;
@@ -556,6 +358,65 @@ void computeLeftRightFeats(const vector<int> &games, int expMode, const vector<i
 	}
 
 }
+
+
+void computeOffsFeats(const vector<int> &games, const vector<int> &gamesFld)
+{
+	for(unsigned int g = 0; g < games.size(); ++g)
+	{
+		vector<CvSize> gridSizes;
+		vector<Point2i> gridsNum;
+		setUpGrids(gridSizes, gridsNum, gamesFld[g]);
+
+		int gameId = games[g];
+		ostringstream convertGameId;
+		convertGameId << gameId ;
+		string gameIdStr = convertGameId.str();
+
+		if(gameId < 10)
+			gameIdStr = "0" + gameIdStr;
+
+		string odLabelFilePath = "offsFeats/odGame" + gameIdStr;
+		vector<playId> pIds;
+		vector<string> dirs, odLabels;
+
+		readOdLabels(odLabelFilePath, pIds, dirs, odLabels);
+
+		cout << "Computing offense feature vectors of Game" << gameIdStr << "..."<< endl;
+
+		string offFeatFile = "offsFeats/Game" + gameIdStr + "/offFeats";
+		ofstream foutOffFeat(offFeatFile.c_str());
+
+		//compute feature vector for each play with all models
+		for(unsigned int i = 0; i < pIds.size(); ++i)
+		{
+			vector<int> fVecOnePlay;
+			play *p = NULL;
+			cout << "gameId: " << pIds[i].gameId << " vidId: " << pIds[i].vidId << endl;
+			if (p != NULL)
+				delete p;
+			p = new play(pIds[i], gamesFld[g]);
+			p->setUp();
+
+			direction d = nonDir;
+			if(odLabels[i] == "o")
+				d = leftDir;
+			else if(odLabels[i] == "d")
+				d = rightDir;
+			p->extractOffsGridsFeatRect(d, fVecOnePlay, gridSizes, gridsNum);
+
+
+			foutOffFeat << odLabels[i] << ",";
+			for(unsigned int j = 0; j < fVecOnePlay.size(); ++j)
+				foutOffFeat << fVecOnePlay[j] << ",";
+			foutOffFeat << endl;
+
+		}
+
+		foutOffFeat.close();
+	}
+}
+
 
 void getPlayIds(const std::vector<int> &games, vector<playId> &pIds)
 {
@@ -722,10 +583,6 @@ void computeOdExpFeats(const vector<int> &games)
 	fOutOExp.close();
 	fOutDExp.close();
 
-//	vector<CvSize> gridSizes;
-//	vector<Point2i> gridsNum;
-//	setUpGrids(gridSizes, gridsNum);
-//	plotOdExp(fVecOPlaysExp, fVecDPlaysExp, gridSizes, gridsNum);
 }
 
 
@@ -822,11 +679,6 @@ void computeOverallExpFeats(const vector<int> &games)
 
 	fOutLeftExp.close();
 	fOutRightExp.close();
-
-//	vector<CvSize> gridSizes;
-//	vector<Point2i> gridsNum;
-//	setUpGrids(gridSizes, gridsNum);
-//	plotOdExp(fVecLeftPlaysExp, fVecRightPlaysExp, gridSizes, gridsNum);
 }
 
 
@@ -834,13 +686,10 @@ void computeOverallExpFeats(const vector<int> &games)
 void readOdExpFeats(vector<vector<int> > &fVecOPlaysExp, vector<vector<int> > &fVecDPlaysExp,
 		string oExpFile, string dExpFile)
 {
-//	string oExpFile = "randTreesTrainData/features/oExp";
-//	string dExpFile = "randTreesTrainData/features/dExp";
 	vector<int> zerosVec(fNumPerPlayOneSide, 0);
 	fVecOPlaysExp = vector<vector<int> >(losCntBins, zerosVec);
 	fVecDPlaysExp = vector<vector<int> >(losCntBins, zerosVec);
 
-	//ifstream finOExp(oExpFile.c_str()), finDExp(dExpFile.c_str());
 	cout << "reading " << oExpFile << endl;
 	ifstream finOExp(oExpFile.c_str());
 	if(!finOExp.is_open())
@@ -876,11 +725,8 @@ void readOdExpFeats(vector<vector<int> > &fVecOPlaysExp, vector<vector<int> > &f
 		for(unsigned int j = 0; j < fVecOPlaysExp[i].size(); ++j)
 		{
 			finOExp >> fVecOPlaysExp[i][j];
-			//cout << fVecOPlaysExp[i][j] << " ";
 			finDExp >> fVecDPlaysExp[i][j];
-			//cout << fVecDPlaysExp[i][j] << " ";
 		}
-		//cout << endl;
 	}
 
 	finOExp.close();
@@ -891,7 +737,6 @@ void readOdExpFeats(vector<vector<int> > &fVecOPlaysExp, vector<vector<int> > &f
 void computeOdSubFeatsMissExp(const vector<int> &games, int odMode)
 {
 	vector<vector<int> > fVecOPlaysExp, fVecDPlaysExp;
-	//readOdExpFeats(fVecOPlaysExp, fVecDPlaysExp);
 
 	string oExpFile = "randTreesTrainData/features/oExp";
 	string dExpFile = "randTreesTrainData/features/dExp";
@@ -1034,9 +879,6 @@ void computeOdSubFeatsMissExp(const vector<int> &games, int odMode)
 				}
 
 				fout << odLabels[i] << ",";
-//				for(unsigned int j = 0; j < fVecOnePlay.size() ; ++j)
-//					fout << fVecOnePlay[j] << ",";
-//				fout << endl;
 				double maxFVal = -1.0;
 				for(unsigned int j = 0; j < fVecOnePlay.size(); ++j)
 					if(abs(fVecOnePlay[j]) > maxFVal && inFldOnePlay[j])
@@ -1088,7 +930,6 @@ void computeOdConcaFMissExp(const std::vector<int> &games, int odMode)
 		cout << "Computing concatenating feature vectors of Game"
 				<< gameIdStr << " with expectation compensation..."<< endl;
 
-		//string featuresFile = "randTreesTrainData/featureVecsGame" + gameIdStr;
 		string leftFeatFile = "randTreesTrainData/features/featsLeftRectGame" + gameIdStr;
 		leftFeatFiles.push_back(leftFeatFile);
 		string rightFeatFile = "randTreesTrainData/features/featsRightRectGame" + gameIdStr;
@@ -1208,31 +1049,6 @@ void computeOdConcaFMissExp(const std::vector<int> &games, int odMode)
 					fVecOnePlay.push_back(fVecOnePlayRight[j]);
 
 				fout << odLabels[i] << ",";
-//				for(unsigned int j = 0; j < fVecOnePlay.size() ; ++j)
-//					fout << fVecOnePlay[j] << ",";
-//				fout << endl;
-//				double maxFVal = -1.0;
-//				for(unsigned int j = 0; j < fVecOnePlay.size(); ++j)
-//					if(abs(fVecOnePlay[j]) > maxFVal && fVecOnePlay[j] > .0)
-//						maxFVal = abs(fVecOnePlay[j]);
-//
-//				if(maxFVal != .0)
-//				{
-//					for(unsigned int j = 0; j < fVecOnePlay.size(); ++j)
-//					{
-//						if(fVecOnePlay[j] > .0)
-//							fout << fVecOnePlay[j] / maxFVal << ",";
-//						else
-//							fout << fVecOnePlay[j] << ",";
-//					}
-//				}
-//				else
-//				{
-//					for(unsigned int j = 0; j < fVecOnePlay.size(); ++j)
-//					{
-//						fout << fVecOnePlay[j] << ",";
-//					}
-//				}
 
 				for(unsigned int j = 0; j < fVecOnePlay.size(); ++j)
 					fout << fVecOnePlay[j] << ",";
@@ -1338,9 +1154,6 @@ void computeOdConcaFOverallExp(const vector<int> &games)
 						fout << fVecOnePlay[j] << ",";
 				}
 
-//				for(unsigned int j = 0; j < fVecOnePlay.size(); ++j)
-//					fout << fVecOnePlay[j] << ",";
-
 				fout << endl;
 			}
 		fout.close();
@@ -1407,21 +1220,6 @@ void computeOdFeatsNoExp(const vector<int> &games, int fMode)
 
 
 				fout << (char)leftLabels[i] << ",";
-//				int maxFVal = -1;
-//				for(unsigned int j = 0; j < fVecOnePlay.size(); ++j)
-//					if(abs(fVecOnePlay[j]) > maxFVal)
-//						maxFVal = abs(fVecOnePlay[j]);
-//
-//				if(maxFVal != 0)
-//				{
-//					for(unsigned int j = 0; j < fVecOnePlay.size(); ++j)
-//						fout << (fVecOnePlay[j] + 0.0) /  (maxFVal + 0.0) << ",";
-//				}
-//				else
-//				{
-//					for(unsigned int j = 0; j < fVecOnePlay.size(); ++j)
-//						fout << (fVecOnePlay[j] + 0.0) << ",";
-//				}
 
 				double maxFVal = .0;
 				for(unsigned int j = 0; j < fVecOnePlay.size(); ++j)
@@ -1438,30 +1236,6 @@ void computeOdFeatsNoExp(const vector<int> &games, int fMode)
 						fout << fVecOnePlay[j] << ",";
 				}
 				fout << endl;
-//				if(fMode ==2)
-//				{
-//					int maxFVal = -1;
-//					for(unsigned int j = 0; j < fVecOnePlay.size(); ++j)
-//						if(abs(fVecOnePlay[j]) > maxFVal && fVecOnePlay[j] > 0)
-//							maxFVal = abs(fVecOnePlay[j]);
-//
-//					if(maxFVal != 0)
-//					{
-//						for(unsigned int j = 0; j < fVecOnePlay.size(); ++j)
-//							if(fVecOnePlay[j] > 0)
-//								fout << (fVecOnePlay[j] + 0.0) /  (maxFVal + 0.0) << ",";
-//							else
-//								fout << (fVecOnePlay[j] + 0.0) << ",";
-//					}
-//					else
-//					{
-//						for(unsigned int j = 0; j < fVecOnePlay.size(); ++j)
-//							fout << (fVecOnePlay[j] + 0.0) << ",";
-//					}
-//
-//
-//					fout << endl;
-//				}
 			}
 		fout.close();
 	}
@@ -1559,9 +1333,6 @@ int extractFeatures(const vector<int> &games, const vector<int> &gamesFld, int e
 
 	if(expMode == 1)
 	{
-		//with expectation
-//		computeLeftRightFeats(games, 1);
-//		computeOdExpFeats(games);
 		computeOverallExpFeats(games);
 
 		if(fMode == 1)
@@ -1574,21 +1345,13 @@ int extractFeatures(const vector<int> &games, const vector<int> &gamesFld, int e
 		else if(fMode == 2)
 		{
 			//concatenation
-//			computeOdConcaFMissExp(games, 1);
-//			computeOdConcaFMissExp(games, 2);
-//			computeOdConcaFMissExp(games, 3);
 			computeOdConcaFOverallExp(games);
 		}
 	}
 	else if(expMode == 0)
 	{
 		//no expectation
-	//	computeLeftRightFeats(games, 0);
-		//subtraction
 		computeOdFeatsNoExp(games, fMode);
-//		computeOdFeatsIndRspNoExp(games, fMode);
-		//concatenation
-		//computeOdFeatsNoExp(games, fMode);
 	}
 
 	return 1;
@@ -1597,10 +1360,7 @@ int extractFeatures(const vector<int> &games, const vector<int> &gamesFld, int e
 
 int extractFeatures(const vector<int> &games, const vector<int> &gamesFld)
 {
-	int expMode = 0;
-	int fMode = 2;
-	computeLeftRightFeats(games, expMode, gamesFld);
-	computeOdFeatsNoExp(games, fMode);
+	computeOffsFeats(games, gamesFld);
 
 	return 1;
 }

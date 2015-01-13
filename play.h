@@ -53,8 +53,10 @@ public:
 	//find the los on the rectified foreground
 	void findLosOnRectFg(const Mat &homoMat);
 	int getLosCntIdx();
-
 	void getTrueDir();
+	void getLosCntGt();
+	void computeRectLosCntGt();
+	void computeRectLosCntGt(const Mat& orgToFldHMat);
 
 	void setUp();
 
@@ -69,6 +71,7 @@ public:
 	void rectification(Mat& orgToFldHMat);
 	void rctfWithoutDetectLos(Mat& orgToFldHMat);
 	void writeMatchPnts();
+	void saveHomoMat(const Mat& orgToFldHMat);
 	void extractOdStripsFeatRect(direction dir, vector<int> &featureVec);
 	void extractOdGridsFeatRect(direction dir, vector<int> &featureVec);
 	//expMode == 0: no expectation
@@ -86,6 +89,8 @@ public:
 	void extOdGridsFeatFldCrdOrigImg(direction dir, vector<int> &featureVec);
 	void extOdGridsFeatFldCrdOrigImg(direction dir, vector<int> &featureVec,
 			const vector<CvSize> &gridSizes, const vector<Point2i> &gridsNum, int expMode);
+	void extractOffsGridsFeatRect(direction dir, vector<int> &featureVec,
+			const vector<CvSize> &gridSizes, const vector<Point2i> &gridsNum);
 
 	void detectOnePlayerTypePosRect(playerTypeId pTypeId, direction offSide);
 	void detectPlayerTypesPosRect(const vector<playerTypeId> &pTypeIds, direction offSide);
@@ -128,6 +133,10 @@ public:
 			const vector<vector<Point2d> > &pToLosVecAllPlays, const vector<vector<int> > &pTypesIdAllPlays);
 	void drawKlt(Mat &orgToFldHMat);
 
+	void genFilledNewFg();
+	vector<Point2d> getPlayersFromFg();
+	void transPlayersFgToFld();
+
 public:
 	struct playId pId;
 
@@ -141,12 +150,14 @@ public:
 	//los center bounding box
 	struct rect losBndBox;
 	Point2d losCnt;
+	Point2d losCntGt;
 
 	Point2d rectLosLine[2];
 	//los after rectification
 	struct rect rectLosBndBox;
 	//los center after rectification
 	Point2d rectLosCnt;
+	Point2d rectLosCntGt;
 
 	//rectified image boundary
 	struct rect imgBndRect;

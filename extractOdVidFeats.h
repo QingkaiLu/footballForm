@@ -6,7 +6,6 @@
 
 #include "commonStructs.h"
 
-//void readOdLabels(std::string odLabelFilePath, std::vector<playId> &pIds, std::vector<char> &dir, std::vector<char> &odLabel);
 
 void readOdLabels(std::string odLabelFilePath, std::vector<playId> &pIds, std::vector<std::string> &dir, std::vector<std::string> &odLabel);
 
@@ -23,16 +22,11 @@ bool readLosCntIds(const std::vector<std::string> &fileNames, std::vector<int> &
 
 void extracOdVidFeatsRts(int gameId, std::vector<playId> &pIds);
 
-//void extracOdVidFeatSvm();
-
-//void extracOdMissFeatsRts(int gameId, std::vector<playId> &pIds);
-
-//void plotOdExp(const std::vector<std::vector<int> > &fVecOPlaysExp,
-//		const std::vector<std::vector<int> > &fVecDPlaysExp,
-//		const std::vector<CvSize> &gridSizes, const std::vector<cv::Point2i> &gridsNum);
 
 //compute the feature vectors on the left and right side of los
 void computeLeftRightFeats(const std::vector<int> &games, int expMode, const std::vector<int> &gamesFld);
+
+void computeOffsFeats(const std::vector<int> &games, const std::vector<int> &gamesFld);
 
 void getPlayIds(const std::vector<int> &games, std::vector<playId> &pIds);
 
