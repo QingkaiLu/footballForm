@@ -94,8 +94,6 @@ bool readOdFeatData(const vector<string> &fileNames, vector<vector<double> > &fe
 			features.push_back(featuresOneSample);
 
 		}
-
-
 	fin.close();
 
 	}
@@ -272,14 +270,39 @@ void extracOdVidFeatsRts(int gameId, vector<playId> &pIds)
 void setUpGrids(vector<CvSize> &gridSizes, vector<Point2i> &gridsNum, int fldModel)
 {
 	fieldModel fldMod(fldModel);
-	gridSizes.push_back(cvSize(fldMod.yardLinesDist * 8, fldMod.yardLinesDist * 8));
-	gridsNum.push_back(Point2i(1, 2));
-	gridSizes.push_back(cvSize(fldMod.yardLinesDist * 4, fldMod.yardLinesDist * 4));
-	gridsNum.push_back(Point2i(2, 4));
-	gridSizes.push_back(cvSize(fldMod.yardLinesDist * 2, fldMod.yardLinesDist * 2));
+//	gridSizes.push_back(cvSize(fldMod.yardLinesDist * 8, fldMod.yardLinesDist * 8));
+//	gridsNum.push_back(Point2i(1, 2));
+//	gridSizes.push_back(cvSize(fldMod.yardLinesDist * 4, fldMod.yardLinesDist * 4));
+//	gridsNum.push_back(Point2i(2, 4));
+//	gridSizes.push_back(cvSize(fldMod.yardLinesDist * 2, fldMod.yardLinesDist * 2));
+//	gridsNum.push_back(Point2i(4, 8));
+//	gridSizes.push_back(cvSize(fldMod.yardLinesDist, fldMod.yardLinesDist));
+//	gridsNum.push_back(Point2i(8, 16));
+
+//	gridSizes.push_back(cvSize(10, fldMod.yardLinesDist));
+//	gridsNum.push_back(Point2i(80, 160));
+	gridSizes.push_back(cvSize(fldMod.yardLinesDist, fldMod.yardLinesDist * 2));
 	gridsNum.push_back(Point2i(4, 8));
-	gridSizes.push_back(cvSize(fldMod.yardLinesDist, fldMod.yardLinesDist));
+	gridSizes.push_back(cvSize(fldMod.yardLinesDist * 0.5, fldMod.yardLinesDist));
 	gridsNum.push_back(Point2i(8, 16));
+
+}
+
+void setUpGrids(vector<CvSize> &gridSizes, int fldModel)
+{
+	fieldModel fldMod(fldModel);
+//	gridSizes.push_back(cvSize(80 * 2, fldMod.yardLinesDist * 2.5));
+//	gridSizes.push_back(cvSize(80 * 2, fldMod.yardLinesDist * 2));
+//	gridSizes.push_back(cvSize(40 * 2, fldMod.yardLinesDist * 2));
+//	gridSizes.push_back(cvSize(40 * 2, fldMod.yardLinesDist * 1.5));
+//	gridSizes.push_back(cvSize(20 * 2, fldMod.yardLinesDist * 1.5));
+//	gridSizes.push_back(cvSize(20 * 2, fldMod.yardLinesDist));
+//	gridSizes.push_back(cvSize(10 * 2, fldMod.yardLinesDist));
+
+	gridSizes.push_back(cvSize(fldMod.yardLinesDist, fldMod.yardLinesDist * 2));
+	gridSizes.push_back(cvSize(fldMod.yardLinesDist * 0.5, fldMod.yardLinesDist));
+
+//	gridSizes.push_back(cvSize(fldMod.yardLinesDist * 0.5, fldMod.yardLinesDist * 2));
 
 }
 
@@ -376,7 +399,8 @@ void computeOffsFeats(const vector<int> &games, const vector<int> &gamesFld)
 		if(gameId < 10)
 			gameIdStr = "0" + gameIdStr;
 
-		string odLabelFilePath = "offsFeats/odGame" + gameIdStr;
+		string odLabelFilePath = "offsFeats/odGame" + gameIdStr + "_FgNew";
+//		string odLabelFilePath = "offsFeats/odGame" + gameIdStr;
 		vector<playId> pIds;
 		vector<string> dirs, odLabels;
 
@@ -403,8 +427,8 @@ void computeOffsFeats(const vector<int> &games, const vector<int> &gamesFld)
 				d = leftDir;
 			else if(odLabels[i] == "d")
 				d = rightDir;
-			p->extractOffsGridsFeatRect(d, fVecOnePlay, gridSizes, gridsNum);
-
+//			p->extractOffsGridsFeatRect(d, fVecOnePlay, gridSizes, gridsNum);
+			p->extractOffsGridsFeatRectPlayers(d, fVecOnePlay, gridSizes, gridsNum);
 
 			foutOffFeat << odLabels[i] << ",";
 			for(unsigned int j = 0; j < fVecOnePlay.size(); ++j)

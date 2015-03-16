@@ -18,6 +18,8 @@ bool readOdFeatData(const std::vector<std::string> &fileNames, std::vector<std::
 //void setUpGrids(std::vector<CvSize> &gridSizes, std::vector<cv::Point2i> &gridsNum, int fldModel);
 void setUpGrids(std::vector<CvSize> &gridSizes, std::vector<cv::Point2i> &gridsNum, int fldModel);
 
+void setUpGrids(std::vector<CvSize> &gridSizes, int fldModel);
+
 bool readLosCntIds(const std::vector<std::string> &fileNames, std::vector<int> &losCntIds);
 
 void extracOdVidFeatsRts(int gameId, std::vector<playId> &pIds);

@@ -112,7 +112,8 @@ play::play(struct playId p, int fldModel)
 #elif predMos == 0
 	mosFilePath = "Mos/Game" + gameIdStr  + "/mos_id_new.txt";
 	scrimLnsGradFilePath = "scrimLine/Game" + gameIdStr + "/losTrueMos/video0" + vidIdxStr + ".glos4";
-	mosImgPath = "mosImages/Game" + gameIdStr + "/vid" + vidIdxStr + ".jpg";
+	//mosImgPath = "mosImages/Game" + gameIdStr + "/vid" + vidIdxStr + ".jpg";
+	mosImgPath = "mosImagesMultiEvd/Game"+ gameIdStr + "/" + gameIdStr +"0" + vidIdxStr + ".jpg";
 //	fgImgPath = "fgMosImages/Game" + gameIdStr + "/video0" + vidIdxStr +".bmp";
 	fgImgPath = "fgNewFill/Game" + gameIdStr + "/video" + vidIdxStr +".jpg";
 #endif
@@ -125,13 +126,24 @@ play::play(struct playId p, int fldModel)
 #endif
 	trueDirFilePath = "ODKGt/Game" + gameIdStr + "/game" + gameIdStr + "_wr_new";
 
-//	fgImgPath = "fgMosImages/Game" + gameIdStr + "/video0" + vidIdxStr +".bmp";
 	videoPath = "../videos/Game" + gameIdStr + "/Game" + gameIdStr + "_video0" + vidIdxStr +".avi";
-//	mosImgPath = "mosImages/Game" + gameIdStr + "/vid" + vidIdxStr + ".jpg";
 	fgImage = imread(fgImgPath.c_str(), CV_LOAD_IMAGE_COLOR);
 	mosFrame = imread(mosImgPath.c_str(), CV_LOAD_IMAGE_COLOR);
+	string rectMosImgPath = "mosImagesMultiEvd/Game"+ gameIdStr + "/" + gameIdStr +"0" + vidIdxStr + "Rect.jpg";
+	rectMosFrame = imread(rectMosImgPath.c_str(), CV_LOAD_IMAGE_COLOR);
 //	fgImage.create(imgYLen, imgXLen, CV_32FC3 );
 //	fgImage = cv::Scalar(0,0,0);
+
+	string rectFgImgPath = "fgNewFill/Game" + gameIdStr + "/video" + vidIdxStr + "Rect.jpg";
+	rectImage = imread(rectFgImgPath.c_str(), CV_LOAD_IMAGE_COLOR);
+	setUpKltTrksAndPlayers();
+	getLosCntGt();
+	computeRectLosCntGt();
+
+//	string fgNewFillPath = "fgNewFill/Game"  + gameIdStr + "/video" + vidIdxStr + ".jpg";
+//	string fgNewFillRectPath = "fgNewFill/Game"  + gameIdStr + "/video" + vidIdxStr + "Rect.jpg";
+//	mosFrame = imread(fgNewFillPath.c_str(), CV_LOAD_IMAGE_COLOR);
+//	rectMosFrame = imread(fgNewFillRectPath.c_str(), CV_LOAD_IMAGE_COLOR);
 
 	return;
 }
@@ -1581,11 +1593,11 @@ void play::extractOffsGridsFeatRect(direction dir, vector<int> &featureVec,
 	convertLevel << k;
 	string levelStr = convertLevel.str();
 
-	string fgPlotPath = "Results/Game" + gameIdStr + "/plots/vid" + vidIdxStr + dirStr + levelStr + ".jpg";
-	string mosPlotPath = "Results/Game" + gameIdStr + "/plots/vidMos" + vidIdxStr + dirStr + levelStr +".jpg";
-
-	imwrite(fgPlotPath, fgImageLevel);
-	imwrite(mosPlotPath, mosImageLevel);
+//	string fgPlotPath = "Results/Game" + gameIdStr + "/plots/vid" + vidIdxStr + dirStr + levelStr + ".jpg";
+//	string mosPlotPath = "Results/Game" + gameIdStr + "/plots/vidMos" + vidIdxStr + dirStr + levelStr +".jpg";
+//
+//	imwrite(fgPlotPath, fgImageLevel);
+//	imwrite(mosPlotPath, mosImageLevel);
 	}
 
 	circle(fgImage, losCnt, 3, CV_RGB(0, 0, 250), 3);
@@ -1594,11 +1606,146 @@ void play::extractOffsGridsFeatRect(direction dir, vector<int> &featureVec,
 	plotScanLines(fgImage, scanRects, featureVec);
 	plotScanLines(mosFrame, scanRects, featureVec);
 
-	plotPath = "Results/Game" + gameIdStr + "/plots/vid" + vidIdxStr + dirStr + ".jpg";
+	plotPath = "Results/Game" + gameIdStr + "/plots/" + gameIdStr + "0" + vidIdxStr + ".jpg";
 	string mosPlotPath = "Results/Game" + gameIdStr + "/plots/vidMos" + vidIdxStr + dirStr + ".jpg";
-
+	int fontFace = 0;
+	double fontScale = 1;
+	int thickness = 2;
+	putText(fgImage, gameIdStr +"0" + vidIdxStr, Point2d(30, 30), fontFace, fontScale, CV_RGB(255, 0, 0), thickness,8);
 	imwrite(plotPath, fgImage);
+	//imwrite(mosPlotPath, mosFrame);
+	Size distImgSize(fld->fieldWidth, fld->fieldLength);
+	Mat fgImageRect;
+	fgImageRect.create(fld->fieldLength, fld->fieldWidth, CV_32FC3);
+	warpPerspective(fgImage, fgImageRect, orgToFldHMat, distImgSize);
+	string fgRectPlotPath = "Results/Game" + gameIdStr + "/plots/" + gameIdStr + "0" + vidIdxStr + "Rect.jpg";
+	putText(fgImageRect, gameIdStr +"0" + vidIdxStr, Point2d(30, 30), fontFace, fontScale, CV_RGB(255, 0, 0), thickness,8);
+	imwrite(fgRectPlotPath, fgImageRect);
+}
+
+void play::extractOffsGridsFeatRectPlayers(direction dir, vector<int> &featureVec,
+		const vector<CvSize> &gridSizes, const vector<Point2i> &gridsNum)
+{
+	Mat orgToFldHMat;
+	rectification(orgToFldHMat);
+	Mat fldToOrgHMat;
+	getOverheadFieldHomo(fldToOrgHMat);
+
+	getLosCntGt();
+	computeRectLosCntGt(orgToFldHMat);
+	rectLosCnt = rectLosCntGt;
+	losCnt = losCntGt;
+
+
+	int d = 0;
+	string dirStr;
+	if(dir == leftDir)
+	{
+		d = -1;
+		dirStr = "Left";
+	}
+	else if (dir == rightDir)
+	{
+		d = 1;
+		dirStr = "Right";
+	}
+	else
+		return;
+	vector<Point2d> playersPos;
+	string playersPosPath = "detectedFormations/Game" + gameIdStr + "/" + "vid" + vidIdxStr + ".pos";
+	readPlayersPos(playersPosPath, playersPos);
+
+	string formImagePath = "Results/Game" + gameIdStr + "/playersPlots/" + gameIdStr +"0" + vidIdxStr + ".jpg";
+	mosFrame = imread(formImagePath.c_str(), CV_LOAD_IMAGE_COLOR);
+
+
+	vector<rect> scanRects;
+	for(unsigned int k = 0; k < gridSizes.size(); ++k)
+	{
+
+		vector<rect> scanRectsOneLevel;
+		vector<int> featureVecLevel;
+
+		for(double i = 0; i < gridsNum[k].x; ++i)
+		{
+			double maxYardLnXCoord, minYardLnXCoord;
+
+			if(dir == rightDir)
+			{
+				maxYardLnXCoord = rectLosCnt.x + d * (i + 1) * gridSizes[k].width;
+				minYardLnXCoord = rectLosCnt.x + d * i * gridSizes[k].width;
+			}
+			else
+			{
+				maxYardLnXCoord = rectLosCnt.x + d * i * gridSizes[k].width;
+				minYardLnXCoord = rectLosCnt.x + d * (i + 1) * gridSizes[k].width;
+			}
+			for(double j = -0.5 * gridsNum[k].y; j < gridsNum[k].y * 0.5; ++j)
+			{
+				int fgPixelsNum = 0;
+				struct rect scanR, scanRField;
+				double lowY = rectLosCnt.y + j * gridSizes[k].height;
+				double upY = rectLosCnt.y + (j + 1) * gridSizes[k].height;
+				scanRField.a = Point2d(minYardLnXCoord, lowY);
+				scanRField.b = Point2d(minYardLnXCoord, upY);
+				scanRField.c = Point2d(maxYardLnXCoord, upY);
+				scanRField.d = Point2d(maxYardLnXCoord, lowY);
+				for(unsigned int k = 1; k < playersPos.size(); ++k)
+				{
+					if(playersPos[k].x >= minYardLnXCoord && playersPos[k].x <= maxYardLnXCoord
+							&& playersPos[k].y >= lowY && playersPos[k].y <= upY)
+						++fgPixelsNum;
+				}
+
+				vector<Point2d> srcScanRVec, dstScanRVec;
+				srcScanRVec.push_back(scanRField.a);
+				srcScanRVec.push_back(scanRField.b);
+				srcScanRVec.push_back(scanRField.c);
+				srcScanRVec.push_back(scanRField.d);
+				perspectiveTransform(srcScanRVec, dstScanRVec, fldToOrgHMat);
+				scanR.a = dstScanRVec[0];
+				scanR.b = dstScanRVec[1];
+				scanR.c = dstScanRVec[2];
+				scanR.d = dstScanRVec[3];
+
+				scanRects.push_back(scanR);
+				featureVec.push_back(fgPixelsNum);
+
+				scanRectsOneLevel.push_back(scanR);
+				featureVecLevel.push_back(fgPixelsNum);
+			}
+		}
+
+	Mat mosImageLevel;
+	mosFrame.copyTo(mosImageLevel);
+
+	circle(mosImageLevel, losCnt, 3, CV_RGB(0, 0, 250), 3);
+	plotScanLines(mosImageLevel, scanRectsOneLevel, featureVecLevel);
+
+	ostringstream convertLevel;
+	convertLevel << k;
+	string levelStr = convertLevel.str();
+
+//	string mosPlotPath = "Results/Game" + gameIdStr + "/plots/vidMos" + vidIdxStr + dirStr + levelStr +".jpg";
+//	imwrite(mosPlotPath, mosImageLevel);
+	}
+
+	circle(mosFrame, losCnt, 3, CV_RGB(0, 0, 250), 3);
+	plotScanLines(mosFrame, scanRects, featureVec);
+
+	string mosPlotPath = "Results/Game" + gameIdStr + "/plots/" + gameIdStr + "0" + vidIdxStr + ".jpg";
+//	int fontFace = 0;
+//	double fontScale = 1;
+//	int thickness = 2;
 	imwrite(mosPlotPath, mosFrame);
+	Size distImgSize(fld->fieldWidth, fld->fieldLength);
+	Mat mosImageRect;
+	mosImageRect.create(fld->fieldLength, fld->fieldWidth, CV_32FC3);
+	warpPerspective(mosFrame, mosImageRect, orgToFldHMat, distImgSize);
+	string fgRectPlotPath = "Results/Game" + gameIdStr + "/plots/" + gameIdStr + "0" + vidIdxStr + "Rect.jpg";
+//	putText(fgImageRect, gameIdStr +"0" + vidIdxStr, Point2d(30, 30), fontFace, fontScale, CV_RGB(255, 0, 0), thickness,8);
+	imwrite(fgRectPlotPath, mosImageRect);
+
 }
 
 void play::detectEllipsesFromFg(vector<RotatedRect> &ellipses)
@@ -2288,6 +2435,13 @@ void play::detectForms(direction offSide)
 	Mat fldToOrgHMat;
 	getOverheadFieldHomo(fldToOrgHMat);
 
+//	findLosOnRectFg(orgToFldHMat);
+
+	getLosCntGt();
+	computeRectLosCntGt(orgToFldHMat);
+	rectLosCnt = rectLosCntGt;
+	losCnt = losCntGt;
+
 	vector<Point2d> srcLosVec, dstLosVec;
 	srcLosVec.push_back(rectLosBndBox.a);
 	srcLosVec.push_back(rectLosBndBox.b);
@@ -2327,6 +2481,8 @@ void play::detectForms(direction offSide)
 
 //	getOffensePlayers(playersLocSet, pLocSetFld, this, players, offSide);
 //	getOffensePlayers(playersLocSet, pLocSetFld, this, players, offSide, scores);
+	vector<Point2d> pFeetLocSetEmpty;
+	getOffsPlayersByLos(playersLocSet, pLocSetFld, pFeetLocSetEmpty, this, players, offSide);
 
 	double bestFormScore = NEGINF;
 	formTree* bestForm;
@@ -2989,7 +3145,12 @@ void play::lablePTypesKnnVarLosCnts(direction offSide, const Mat &trainFeaturesM
 	getOverheadFieldHomo(fldToOrgHMat);
 
 //	getLosBndBoxByUfmClr();
-	getLosBndBoxByClrAndFg();
+//	getLosBndBoxByClrAndFg();
+
+	getLosCntGt();
+	computeRectLosCntGt(orgToFldHMat);
+	rectLosCnt = rectLosCntGt;
+	losCnt = losCntGt;
 
 	string playersFilePath = "playerBndBoxes/Game" + gameIdStr + "/" + gameIdStr +"0" + vidIdxStr + ".players";
 	vector<double> scores;
@@ -3004,6 +3165,7 @@ void play::lablePTypesKnnVarLosCnts(direction offSide, const Mat &trainFeaturesM
 				0.5 * (players[i].a.y + players[i].c.y) );
 		Point2d feetP = Point2d(0.5 * (players[i].b.x + players[i].c.x),
 				0.5 * (players[i].b.y + players[i].c.y) );
+//		Point2d p = feetP;
 		playersLocSet.push_back(p);
 		pFeetLocSet.push_back(feetP);
 		plotRect(mosFrame, players[i], CV_RGB(0, 0, 255));
@@ -3012,8 +3174,8 @@ void play::lablePTypesKnnVarLosCnts(direction offSide, const Mat &trainFeaturesM
 	perspectiveTransform(pFeetLocSet, pFeetLocSetFld, orgToFldHMat);
 
 	vector<Point2d> olLocSet;
-	getRectLosPnts(rectLosBndBox, olLocSet);
-//	olLocSet.push_back(rectLosCnt);
+//	getRectLosPnts(rectLosBndBox, olLocSet);
+	olLocSet.push_back(rectLosCnt);
 
 	vector<vector<double> > costsAllLosCntPos;
 	vector<vector<string> > plsTypesAllLosCntPos;
@@ -3121,12 +3283,7 @@ void play::lablePTypesKnnVarLosCnts(direction offSide, const Mat &trainFeaturesM
 	losBndBox.c = dstLosVec[2];
 	losBndBox.d = dstLosVec[3];
 	losCnt = dstLosVec[4];
-	plotRect(mosFrame, losBndBox, Scalar(0, 255, 0));
-
-	getLosCntGt();
-	computeRectLosCntGt(orgToFldHMat);
-	rectLosCnt = rectLosCntGt;
-	losCnt = losCntGt;
+//	plotRect(mosFrame, losBndBox, Scalar(0, 255, 0));
 
 	for(unsigned int i = 0; i < bestPlayers.size(); ++i)
 		plotRect(mosFrame, bestPlayers[i], CV_RGB(255, 0, 0));
@@ -3162,7 +3319,7 @@ void play::lablePTypesKnnVarLosCnts(direction offSide, const Mat &trainFeaturesM
 		line(rectMosFrame, bestPLocSetFld[i] - Point2d(0, len), bestPLocSetFld[i] + Point2d(0, len), CV_RGB(255, 0, 0),2,8,0);
 	}
 //	plotLos(rectMosFrame, rectLosBndBox);
-	plotRect(rectMosFrame, rectLosBndBox, Scalar(0, 255, 0));
+//	plotRect(rectMosFrame, rectLosBndBox, Scalar(0, 255, 0));
 	line(rectMosFrame, rectLosCnt - Point2d(len, 0), rectLosCnt + Point2d(len, 0), CV_RGB(255, 255, 0),2,8,0);
 	line(rectMosFrame, rectLosCnt- Point2d(0, len), rectLosCnt + Point2d(0, len), CV_RGB(255, 255, 0),2,8,0);
 
@@ -3377,8 +3534,8 @@ void play::getLosBndBoxByClrAndFg()
 	losBndBox.c = dstLosVec[2];
 	losBndBox.d = dstLosVec[3];
 
-	plotRect(mosFrame, losBndBox, Scalar(0, 255, 0));
-	plotRect(rectMosFrame, rectLosBndBox, Scalar(0, 255, 0));
+//	plotRect(mosFrame, losBndBox, Scalar(0, 255, 0));
+//	plotRect(rectMosFrame, rectLosBndBox, Scalar(0, 255, 0));
 	string formImagePath = "Results/Game" + gameIdStr + "/losPlots/" + gameIdStr +"0" + vidIdxStr + ".jpg";
 	imwrite(formImagePath, mosFrame);
 	string formImageRectPath = "Results/Game" + gameIdStr + "/losPlots/" + gameIdStr +"0" + vidIdxStr + "Rect.jpg";
@@ -3466,7 +3623,7 @@ void play::inferMissingPlayers(direction offSide, const Mat &trainFeaturesMat, c
 		else
 		{
 			clr = CV_RGB(0, 255, 0);
-			isPlayerByTrks = isPlayerByKltTracks(trks, srcVec[i], orgToFldHMat);
+			isPlayerByTrks = isPlayerByKltTracks(this, trks, srcVec[i], orgToFldHMat);
 		}
 
 		if(missIndicator[i])
@@ -3494,6 +3651,8 @@ void play::inferMissingPlayers(direction offSide, const Mat &trainFeaturesMat, c
 
 	drawKlt(orgToFldHMat);
 	string formImagePath = "Results/Game" + gameIdStr + "/playersPlots/" + gameIdStr +"0" + vidIdxStr + ".jpg";
+//    imshow( "Display", mosFrame );                   // Show our image inside it.
+//    waitKey(0);
 	imwrite(formImagePath, mosFrame);
 	string formImageRectPath = "Results/Game" + gameIdStr + "/playersPlots/" + gameIdStr +"0" + vidIdxStr + "Rect.jpg";
 	imwrite(formImageRectPath, rectMosFrame);
@@ -3507,14 +3666,33 @@ void play::drawKlt(Mat &orgToFldHMat)
 	drawKltTracks(this, trks, orgToFldHMat);
 }
 
-void play::genFilledNewFg()
+void play::drawKlt()
+{
+	string kltFilePath = "Tracks/Game" + gameIdStr + "/video" + vidIdxStr + ".tracks";
+	vector<track> trks;
+	readKltTracks(kltFilePath, trks);
+	Mat orgToFldHMat;
+	rctfWithoutDetectLos(orgToFldHMat);
+//	mosFrame.release();
+//	rectMosFrame.release();
+//	string fgNewFillPath = "fgNewFill/Game"  + gameIdStr + "/video" + vidIdxStr + ".jpg";
+//	string fgNewFillRectPath = "fgNewFill/Game"  + gameIdStr + "/video" + vidIdxStr + "Rect.jpg";
+//	mosFrame = imread(fgNewFillPath.c_str(), CV_LOAD_IMAGE_COLOR);
+//	rectMosFrame = imread(fgNewFillRectPath.c_str(), CV_LOAD_IMAGE_COLOR);
+	drawKltTracks(this, trks, orgToFldHMat);
+	string formImagePath = "Results/Game" + gameIdStr + "/plots/" + gameIdStr +"0" + vidIdxStr + ".jpg";
+	imwrite(formImagePath, mosFrame);
+	string formImageRectPath = "Results/Game" + gameIdStr + "/plots/" + gameIdStr +"0" + vidIdxStr + "Rect.jpg";
+	imwrite(formImageRectPath, rectMosFrame);
+}
+bool play::genFilledNewFg()
 {
 	string fgNewPath = "fgNew/Game"  + gameIdStr + "/video" + vidIdxStr + ".jpg";
 	Mat fgNew = imread(fgNewPath.c_str(), CV_LOAD_IMAGE_COLOR);
 	if(!fgNew.data )                              // Check for invalid input
 	{
-	    cout <<  "Could not open or find the image" << endl;
-	    return;
+	    //cout <<  "Could not open or find the image" << endl;
+	    return false;
 	}
 	cvtColor(fgNew, fgNew, CV_RGB2GRAY);
 	//prevent filling the whole image because edges are white
@@ -3539,7 +3717,7 @@ void play::genFilledNewFg()
 	warpPerspective(fgNewFill, rectFgNewFill, orgToFldHMat, rectImgSize);
 	string fgNewFillRectPath = "fgNewFill/Game"  + gameIdStr + "/video" + vidIdxStr + "Rect.jpg";
 	imwrite(fgNewFillRectPath, rectFgNewFill);
-
+	return true;
 }
 
 vector<Point2d> play::getPlayersFromFg()
@@ -3634,6 +3812,222 @@ void play::transPlayersFgToFld()
 	string fgNewGridsRectPath = "fgNewGrids/Game"  + gameIdStr + "/" + gameIdStr + "0" + vidIdxStr + "Rect.jpg";
 	imwrite(fgNewGridsRectPath, fgNewFillRect);
 	fout.close();
+}
+
+vector<double> play::getOnePosFeatureVec(Point2d pos)
+{
+//	Mat orgToFldHMat;
+//	rectification(orgToFldHMat);
+//	Mat fldToOrgHMat;
+//	getOverheadFieldHomo(fldToOrgHMat);
+
+//	vector<double> featureVec(5, 1);
+//	getLosCntGt();
+//	computeRectLosCntGt(orgToFldHMat);
+	vector<double> featureVec;
+	int winX = 2 * 15, winY = 5 * 15;
+	Mat rectFgGray;
+	cvtColor(rectImage, rectFgGray, CV_RGB2GRAY);
+	double fgPixelsNum = 0;
+	for(int j = pos.y - winY / 2; j < pos.y + winY / 2; ++j)
+		for(int i = pos.x - winX / 2; i < pos.x + winX / 2; ++i)
+		{
+			if((int)rectFgGray.at<uchar>(j,i) >= 200)
+				++fgPixelsNum;
+		}
+	featureVec.push_back(fgPixelsNum);
+
+	double playersNum = 0;
+	for(unsigned int i = 0; i < pLocSetFld.size(); ++i)
+	{
+		if(pLocSetFld[i].x >= pos.x - winX / 2 && pLocSetFld[i].x <= pos.x + winX / 2
+				&& pLocSetFld[i].y >= pos.y - winY / 2 && pLocSetFld[i].y <= pos.y + winY / 2)
+			++playersNum;
+	}
+	featureVec.push_back(playersNum);
+
+	//larger window for klt tracks
+	winX *= 2;
+	//winY *= 2;
+	double trksLen = 0;
+	for(unsigned int i = 0; i < rectTrks.size(); ++i)
+	{
+		bool inside = false;
+		if(rectTrks[i].startPos.x >= pos.x - winX / 2 && rectTrks[i].startPos.x <= pos.x + winX / 2
+				&& rectTrks[i].startPos.y >= pos.y - winY / 2 && rectTrks[i].startPos.y <= pos.y + winY / 2)
+			inside = true;
+		if(!inside && rectTrks[i].endPos.x >= pos.x - winX / 2 && rectTrks[i].endPos.x <= pos.x + winX / 2
+				&& rectTrks[i].endPos.y >= pos.y - winY / 2 && rectTrks[i].endPos.y <= pos.y + winY / 2)
+			inside = true;
+		Point2d midPos = (rectTrks[i].startPos + rectTrks[i].endPos) * 0.5;
+		if(!inside && midPos.x >= pos.x - winX / 2 && midPos.x <= pos.x + winX / 2
+				&& midPos.y >= pos.y - winY / 2 && midPos.y <= pos.y + winY / 2)
+			inside = true;
+		if(inside)
+			trksLen += norm(rectTrks[i].endPos - rectTrks[i].startPos);
+	}
+	featureVec.push_back(trksLen);
+	featureVec.push_back(pos.x - rectLosCntGt.x);
+	featureVec.push_back(pos.y - rectLosCntGt.y);
+	return featureVec;
+}
+
+vector<vector<double> > play::getAllPosFeatureVecs(vector<double> &maxFeatureVec, vector<Point2d> &allPos,
+		string odLabel)
+{
+	Mat orgToFldHMat;
+	rectification(orgToFldHMat);
+
+	Point2d leftUp(0, 0), leftDown(0, imgYLen),
+			rightDown(imgXLen, imgYLen), rightUp(imgXLen, 0);
+	vector<Point2d> srcVec, dstVec;
+	srcVec.push_back(leftUp);
+	srcVec.push_back(leftDown);
+	srcVec.push_back(rightDown);
+	srcVec.push_back(rightUp);
+	perspectiveTransform(srcVec, dstVec, orgToFldHMat);
+	int maxX = INT_MIN, maxY = INT_MIN;
+	int minX = INT_MAX, minY = INT_MAX;
+	for(unsigned int i = 0; i < dstVec.size(); ++i)
+	{
+		if(dstVec[i].x > maxX)
+			maxX = dstVec[i].x;
+		if(dstVec[i].y > maxY)
+			maxY = dstVec[i].y;
+		if(dstVec[i].x < minX)
+			minX = dstVec[i].x;
+		if(dstVec[i].y < minY)
+			minY = dstVec[i].y;
+	}
+	if(maxX >= fld->fieldWidth)
+		maxX = fld->fieldWidth;
+	if(maxY >= fld->fieldLength)
+		maxY = fld->fieldLength;
+	if(minX <= 0)
+		minX = 1;
+	if(minY <= 0)
+		minY = 1;
+	vector<vector<double> > featureVecs;
+	if(odLabel == "o")
+		maxX = rectLosCntGt.x;
+	else if(odLabel == "d")
+		minX = rectLosCntGt.x;
+	else
+	{
+		cout << "Wrong od label!" << endl;
+		return featureVecs;
+	}
+	maxFeatureVec = vector<double>(5, NEGINF);
+	int step = 10;
+	for(int x = minX; x < maxX; x += step)
+		for(int y = minY; y < maxY; y += step)
+		{
+//			cout << x << " " << y << endl;
+			allPos.push_back(Point2d(x, y));
+//			circle(rectMosFrame, Point2d(x, y), 10, CV_RGB(255, 255, 0), 2);
+			vector<double> fVec = getOnePosFeatureVec(Point2d(x,y));
+			for(unsigned int i = 0; i < fVec.size(); ++i)
+				if(fVec[i] > maxFeatureVec[i])
+					maxFeatureVec[i] = fVec[i];
+			featureVecs.push_back(fVec);
+		}
+	int appFeatureNum = 3;
+	for(unsigned int i = 0; i < featureVecs.size(); ++i)
+		for(int j = 0; j < appFeatureNum; ++j)
+			if(maxFeatureVec[j] != 0)
+				featureVecs[i][j] /= maxFeatureVec[j];
+	return featureVecs;
+}
+
+void play::setUpKltTrksAndPlayers()
+{
+	Mat orgToFldHMat;
+	rectification(orgToFldHMat);
+	string kltFilePath = "Tracks/Game" + gameIdStr + "/video" + vidIdxStr + ".tracks";
+	readKltTracks(kltFilePath, kltTrks);
+	transTracksFromOrgToFld(kltTrks, orgToFldHMat, rectTrks);
+	string playersFilePath = "playerBndBoxes/Game" + gameIdStr + "/" + gameIdStr +"0" + vidIdxStr + ".players";
+	vector<double> scores;
+	vector<struct rect> players;
+	vector<double> areas;
+	readPlayerBndBoxes(playersFilePath, scores, players, areas);
+	for(unsigned int i = 0; i < players.size(); ++i)
+	{
+		Point2d p = Point2d(0.5 * (players[i].a.x + players[i].c.x),
+				0.5 * (players[i].a.y + players[i].c.y) );
+		playersLocSet.push_back(p);
+	}
+	perspectiveTransform(playersLocSet, pLocSetFld, orgToFldHMat);
+}
+
+void play::showForm(vector<Point2d> &playersFormPos, vector<string> &playersFormTypes, playId &bestPId)
+{
+	if(playersFormPos.empty())
+	{
+		cout << "bestPId.vidId " << bestPId.vidId << endl;
+		cout << "Empty playersFormPos" << endl;
+		return;
+	}
+	Mat fldToOrgHMat;
+	getOverheadFieldHomo(fldToOrgHMat);
+	vector<Point2d> playersFormPosOrig;
+	perspectiveTransform(playersFormPos, playersFormPosOrig, fldToOrgHMat);
+	int fontFace = 0;
+	double fontScale = 1;
+	int thickness = 2;
+
+	ostringstream convertVidId;
+	convertVidId << bestPId.vidId;
+	string vidId = convertVidId.str();
+
+	putText(rectMosFrame, vidId, Point2d(30, 30), fontFace, fontScale, CV_RGB(255, 0, 0), thickness,8);
+	putText(mosFrame, vidId, Point2d(30, 30), fontFace, fontScale, CV_RGB(255, 0, 0), thickness,8);
+	for(unsigned int i = 0; i < playersFormPos.size(); ++i)
+	{
+		circle(rectMosFrame, playersFormPos[i], 15, CV_RGB(0, 255, 0), thickness);
+		putText(rectMosFrame, playersFormTypes[i], playersFormPos[i], fontFace, fontScale, CV_RGB(0, 255, 0), thickness,8);
+		circle(mosFrame, playersFormPosOrig[i], 15, CV_RGB(0, 255, 0), thickness);
+		putText(mosFrame, playersFormTypes[i], playersFormPosOrig[i], fontFace, fontScale, CV_RGB(0, 255, 0), thickness,8);
+	}
+	string formImagePath = "Results/Game" + gameIdStr + "/playersPlots/" + gameIdStr +"0" + vidIdxStr + ".jpg";
+	imwrite(formImagePath, mosFrame);
+	string formImageRectPath = "Results/Game" + gameIdStr + "/playersPlots/" + gameIdStr +"0" + vidIdxStr + "Rect.jpg";
+	imwrite(formImageRectPath, rectMosFrame);
+
+}
+
+void play::showForm(vector<Point2d> &playersFormPos, vector<string> &playersFormTypes)
+{
+	if(playersFormPos.empty())
+	{
+		cout << "Empty playersFormPos" << endl;
+		return;
+	}
+	Mat fldToOrgHMat;
+	getOverheadFieldHomo(fldToOrgHMat);
+	vector<Point2d> playersFormPosOrig;
+	perspectiveTransform(playersFormPos, playersFormPosOrig, fldToOrgHMat);
+	int fontFace = 0;
+	double fontScale = 1;
+	int thickness = 2;
+
+	ostringstream convertVidId;
+	string vidId = convertVidId.str();
+
+	putText(rectMosFrame, vidId, Point2d(30, 30), fontFace, fontScale, CV_RGB(255, 0, 0), thickness,8);
+	putText(mosFrame, vidId, Point2d(30, 30), fontFace, fontScale, CV_RGB(255, 0, 0), thickness,8);
+	for(unsigned int i = 0; i < playersFormPos.size(); ++i)
+	{
+		circle(rectMosFrame, playersFormPos[i], 15, CV_RGB(0, 255, 0), thickness);
+		putText(rectMosFrame, playersFormTypes[i], playersFormPos[i], fontFace, fontScale, CV_RGB(0, 255, 0), thickness,8);
+		circle(mosFrame, playersFormPosOrig[i], 15, CV_RGB(0, 255, 0), thickness);
+		putText(mosFrame, playersFormTypes[i], playersFormPosOrig[i], fontFace, fontScale, CV_RGB(0, 255, 0), thickness,8);
+	}
+	string formImagePath = "Results/Game" + gameIdStr + "/playersPlots/" + gameIdStr +"0" + vidIdxStr + ".jpg";
+	imwrite(formImagePath, mosFrame);
+	string formImageRectPath = "Results/Game" + gameIdStr + "/playersPlots/" + gameIdStr +"0" + vidIdxStr + "Rect.jpg";
+	imwrite(formImageRectPath, rectMosFrame);
+
 }
 
 

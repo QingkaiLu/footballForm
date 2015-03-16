@@ -184,52 +184,28 @@ void plotYardLnsAndLos(Mat& img, struct rect& scrimLnRect, vector<yardLine> yard
 
 void plotScanLines(Mat& img, vector<rect> &scanLines, const vector<int> &featureVec)
 {
-//	int fontFace = FONT_HERSHEY_SIMPLEX;
-	int fontFace = 0;
-	double fontScale = 1;
-	int thickness = 2;
+//	int fontFace = 0;
+//	double fontScale = 1;
+//	int thickness = 2;
 
 	for(unsigned int i = 0; i < scanLines.size(); ++i)
 	{
-//		Point2d E = scanLines[i].b + 10 * (scanLines[i].b - scanLines[i].a);
-//		Point2d F = scanLines[i].d + 10 * (scanLines[i].c - scanLines[i].d);
-//		line(img, scanLines[i].a, E, CV_RGB(200, 0, 0),2,8,0);
-//		line(img, scanLines[i].d, F, CV_RGB(200, 0, 0),2,8,0);
-
-//		line(img, scanLines[i].a, scanLines[i].b, CV_RGB(200, 0, 0),2,8,0);
-//		line(img, scanLines[i].c, scanLines[i].d, CV_RGB(200, 0, 0),2,8,0);
 		plotRect(img, scanLines[i], CV_RGB(200, 0, 0));
 
-//		if(i == 10)
-//		{
-//			putText(img, "a", scanLines[i].a, fontFace, fontScale, CV_RGB(0, 0, 250), thickness,8);
-//			putText(img, "b", scanLines[i].b, fontFace, fontScale, CV_RGB(0, 0, 250), thickness,8);
-//			putText(img, "c", scanLines[i].c, fontFace, fontScale, CV_RGB(0, 0, 250), thickness,8);
-//			putText(img, "d", scanLines[i].d, fontFace, fontScale, CV_RGB(0, 0, 250), thickness,8);
-//		}
 
-
-		ostringstream convertF;
-		convertF << featureVec[i] ;
-		string featStr = convertF.str();
-
-		Point2d p = (scanLines[i].a + scanLines[i].b + scanLines[i].c + scanLines[i].d) * 0.25;
-
-		putText(img, featStr, p , fontFace, fontScale, CV_RGB(200, 0, 0), thickness,8);
-
-		ostringstream convertIdx;
-		convertIdx << i ;
-		string idx = convertIdx.str();
-
-		putText(img, idx, scanLines[i].a * 0.7 + scanLines[i].b * 0.3, fontFace, fontScale, CV_RGB(0, 0, 200), thickness,8);
-
-//		if((i % 2) == 0)
-//			putText(img, featStr, p , fontFace, fontScale, CV_RGB(200, 0, 0), thickness,8);
-//		else
-//			putText(img, featStr, p , fontFace, fontScale, CV_RGB(0, 0, 200), thickness,8);
-
-//		line(img, scanLines[i].a,  scanLines[i].b, CV_RGB(255, 0, 0),2,8,0);
-//		line(img, scanLines[i].d,  scanLines[i].c, CV_RGB(255, 0, 0),2,8,0);
+//		ostringstream convertF;
+//		convertF << featureVec[i] ;
+//		string featStr = convertF.str();
+//
+//		Point2d p = (scanLines[i].a + scanLines[i].b + scanLines[i].c + scanLines[i].d) * 0.25;
+//
+//		putText(img, featStr, p , fontFace, fontScale, CV_RGB(200, 0, 0), thickness,8);
+//
+//		ostringstream convertIdx;
+//		convertIdx << i ;
+//		string idx = convertIdx.str();
+//
+//		putText(img, idx, scanLines[i].a * 0.7 + scanLines[i].b * 0.3, fontFace, fontScale, CV_RGB(0, 0, 200), thickness,8);
 	}
 }
 
@@ -1482,26 +1458,22 @@ void transTracksFromOrgToFld(const vector<track> &trks, const Mat &orgToFldHMat,
 void drawKltTracks(play *p, const vector<track> &trks, const Mat &orgToFldHMat)
 {
 	vector<track> rectTrks;
-//	vector<Point2d> srcVec, dstVec;
-//	for(unsigned int i = 0; i < trks.size(); ++i)
-//	{
-//		srcVec.push_back(trks[i].startPos);
-//		srcVec.push_back(trks[i].endPos);
-//	}
-//	perspectiveTransform(srcVec, dstVec, orgToFldHMat);
-//	for(unsigned int i = 0; i < rectTrks.size(); ++i)
-//	{
-//		rectTrks[i].startPos = dstVec[2 * i];
-//		rectTrks[i].endPos = dstVec[2 * i + 1];
-//	}
 	transTracksFromOrgToFld(trks, orgToFldHMat, rectTrks);
 
 //	int fontFace = 0;
 //	double fontScale = 1;
 	int thickness = 2;
+//	Scalar clr = CV_RGB(255, 255, 0);
 	Scalar clr = CV_RGB(0, 255, 255);
 	for(unsigned int i = 0; i < trks.size(); ++i)
 	{
+		double trkLen = norm(rectTrks[i].endPos - rectTrks[i].startPos);
+		if(trkLen < 5)
+			continue;
+		Point2d trkMid = (rectTrks[i].endPos + rectTrks[i].startPos) * 0.5;
+		if(trkMid.x < 1 || trkMid.x > p->fld->fieldWidth
+				|| trkMid.y < 1 || trkMid.y > p->fld->fieldLength)
+			continue;
 		line(p->mosFrame, trks[i].startPos, trks[i].endPos, clr, 1, 8, 0);
 		circle(p->mosFrame, trks[i].endPos, 1, clr, thickness);
 		line(p->rectMosFrame, rectTrks[i].startPos, rectTrks[i].endPos, clr, 1, 8, 0);
@@ -1510,7 +1482,7 @@ void drawKltTracks(play *p, const vector<track> &trks, const Mat &orgToFldHMat)
 
 }
 
-bool isPlayerByKltTracks(const vector<track> &trks, const Point2d &pos, const Mat &orgToFldHMat)
+bool isPlayerByKltTracks(play *p, const vector<track> &trks, const Point2d &pos, const Mat &orgToFldHMat)
 {
 	vector<track> rectTrks;
 	transTracksFromOrgToFld(trks, orgToFldHMat, rectTrks);
@@ -1524,6 +1496,10 @@ bool isPlayerByKltTracks(const vector<track> &trks, const Point2d &pos, const Ma
 				(mid.y >= pos.y - len) && (mid.y <= pos.y + len))
 		{
 			double trkLen = norm(rectTrks[i].endPos - rectTrks[i].startPos);
+			Point2d trkMid = (rectTrks[i].endPos + rectTrks[i].startPos) * 0.5;
+			if(trkMid.x < 1 || trkMid.x > p->fld->fieldWidth
+					|| trkMid.y < 1 || trkMid.y > p->fld->fieldLength)
+				continue;
 			if(trkLen >= 5)
 				totalTrkLen += trkLen;
 		}
@@ -1574,5 +1550,57 @@ Mat fillHoles(const Mat &image)
 	return newImage;
 }
 
+void readPlayersPos(string playersPosPath, vector<Point2d> &positions)
+{
+	ifstream fin(playersPosPath.c_str());
+	if(!fin.is_open())
+	{
+		cout << "Can't open file " << playersPosPath << endl;
+		return;
+	}
+
+	fin.seekg(0, ios::end);
+	if (fin.tellg() == 0) {
+		cout << "Empty file " << playersPosPath << endl;
+		return;
+	}
+	fin.seekg(0, ios::beg);
+	Point2d p;
+	while(!fin.eof())
+	{
+		p.x = -1;
+		fin >> p.x >> p.y;
+		if(p.x == -1)
+			break;
+		positions.push_back(p);
+	}
+	fin.close();
+}
+
+void readPlayersType(string playersTypePath, vector<string> &playersType)
+{
+	ifstream fin(playersTypePath.c_str());
+	if(!fin.is_open())
+	{
+		cout << "Can't open file " << playersTypePath << endl;
+		return;
+	}
+
+	fin.seekg(0, ios::end);
+	if (fin.tellg() == 0) {
+		cout << "Empty file " << playersTypePath << endl;
+		return;
+	}
+	fin.seekg(0, ios::beg);
+	while(!fin.eof())
+	{
+		string pType;
+		fin >> pType;
+		if(pType.empty())
+			break;
+		playersType.push_back(pType);
+	}
+	fin.close();
+}
 
 

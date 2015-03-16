@@ -91,6 +91,9 @@ public:
 			const vector<CvSize> &gridSizes, const vector<Point2i> &gridsNum, int expMode);
 	void extractOffsGridsFeatRect(direction dir, vector<int> &featureVec,
 			const vector<CvSize> &gridSizes, const vector<Point2i> &gridsNum);
+	//extract spatial pyramid features from player detections
+	void extractOffsGridsFeatRectPlayers(direction dir, vector<int> &featureVec,
+			const vector<CvSize> &gridSizes, const vector<Point2i> &gridsNum);
 
 	void detectOnePlayerTypePosRect(playerTypeId pTypeId, direction offSide);
 	void detectPlayerTypesPosRect(const vector<playerTypeId> &pTypeIds, direction offSide);
@@ -132,11 +135,17 @@ public:
 	void inferMissingPlayers(direction offSide, const Mat &trainFeaturesMat, const Mat &trainLabelsMat,
 			const vector<vector<Point2d> > &pToLosVecAllPlays, const vector<vector<int> > &pTypesIdAllPlays);
 	void drawKlt(Mat &orgToFldHMat);
+	void drawKlt();
 
-	void genFilledNewFg();
+	bool genFilledNewFg();
 	vector<Point2d> getPlayersFromFg();
 	void transPlayersFgToFld();
 
+	vector<double> getOnePosFeatureVec(Point2d pos);
+	vector<vector<double> > getAllPosFeatureVecs(vector<double> &maxFeatureVec, vector<Point2d> &allPos, string odLabel);
+	void setUpKltTrksAndPlayers();
+	void showForm(vector<Point2d> &playersFormPos, vector<string> &playersFormTypes, playId &bestPId);
+	void showForm(vector<Point2d> &playersFormPos, vector<string> &playersFormTypes);
 public:
 	struct playId pId;
 
@@ -177,6 +186,8 @@ public:
 	fieldModel* fld;
 	int fldModType;
 
+	vector<track> kltTrks, rectTrks;
+	vector<Point2d> playersLocSet, pLocSetFld;
 };
 
 #endif

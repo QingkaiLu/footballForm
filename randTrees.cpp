@@ -757,7 +757,7 @@ void leavePlayOutTest(const vector<int> &games)
 		trainTestGames.push_back(games[i]);
 	}
 
-		randTreeLeavePlayOut(trainTestGames, pIdsTestGames);
+	randTreeLeavePlayOut(trainTestGames, pIdsTestGames);
 
 }
 
@@ -768,12 +768,12 @@ int randTrees()
 	vector<int> gamesFld;
 	games.push_back(2);
 	gamesFld.push_back(1);
-	games.push_back(8);
-	gamesFld.push_back(1);
-	games.push_back(10);
-	gamesFld.push_back(1);
-	games.push_back(9);
-	gamesFld.push_back(2);
+//	games.push_back(8);
+//	gamesFld.push_back(1);
+//	games.push_back(10);
+//	gamesFld.push_back(1);
+//	games.push_back(9);
+//	gamesFld.push_back(2);
 
 //	int expMode = 0;
 //	int odExpMode = 2;

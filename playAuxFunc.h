@@ -125,8 +125,13 @@ void transTracksFromOrgToFld(const vector<track> &trks, const Mat &orgToFldHMat,
 
 void drawKltTracks(play *p, const vector<track> &trks, const Mat &orgToFldHMat);
 
-bool isPlayerByKltTracks(const vector<track> &trks, const Point2d &pos, const Mat &orgToFldHMat);
+//void filterOutsideKltTrks(play *p, const vector<track> &trks);
+
+bool isPlayerByKltTracks(play *p, const vector<track> &trks, const Point2d &pos, const Mat &orgToFldHMat);
 
 Mat fillHoles(const Mat &image);
+
+void readPlayersPos(string playersPosPath, vector<Point2d> &positions);
+void readPlayersType(string playersTypePath, vector<string> &playersType);
 
 #endif

@@ -31,7 +31,7 @@ double computeTwoFVecKernel(const vector<double> &fVec1, const vector<double> &f
 	}
 
 	double kernel = .0;
-	for(unsigned int l = 0; l < levelsNum; ++l)
+	for(int l = 0; l < levelsNum; ++l)
 	{
 		if(l == 0)
 			kernel += pow(0.5, levelsNum - 1) * kernelsDifLevels[l];
@@ -507,8 +507,8 @@ void computeOdFeatsIndRspSvm(const vector<int> &games, int fMode)
 }
 
 
-int main()
-//int kernelSvm()
+//int main()
+int kernelSvm()
 {
 	vector<int> games;
 	games.push_back(2);
@@ -526,7 +526,7 @@ int main()
 
 //	computeOdConcaFOverallExpSvm(games);
 //	computeOdFeatsIndRspSvm(games, 2);
-//	computeOffsFeats(games, gamesFld);
+	computeOffsFeats(games, gamesFld);
 	computeOffsSpPmdKernel(games);
 
 	return 1;
