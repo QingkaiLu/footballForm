@@ -56,6 +56,7 @@ public:
 	void getTrueDir();
 	void getLosCntGt();
 	void computeRectLosCntGt();
+	Point2d getRectLosCntGt();
 	void computeRectLosCntGt(const Mat& orgToFldHMat);
 
 	void setUp();

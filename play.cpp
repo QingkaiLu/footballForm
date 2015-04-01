@@ -460,6 +460,18 @@ void play::computeRectLosCntGt()
 	rectLosCntGt = dstLosVec[0];
 }
 
+Point2d play::getRectLosCntGt()
+{
+	Mat orgToFldHMat;
+	rctfWithoutDetectLos(orgToFldHMat);
+	vector<Point2d> srcLosVec, dstLosVec;
+	srcLosVec.push_back(losCntGt);
+	perspectiveTransform(srcLosVec, dstLosVec, orgToFldHMat);
+	rectLosCntGt = dstLosVec[0];
+	return rectLosCntGt;
+}
+
+
 void play::computeRectLosCntGt(const Mat& orgToFldHMat)
 {
 	vector<Point2d> srcLosVec, dstLosVec;

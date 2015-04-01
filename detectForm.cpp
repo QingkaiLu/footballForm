@@ -590,8 +590,11 @@ int main()
 //	saveExemplarForms(games, gamesFld);
 
 //	detectFormMltEvidence(games, gamesFld);
-	string formLearningSetFile = "formsLearningSet/odGame02RectForm";
+	string formLearningSetFile = "formsLearningSet/odGame02RectFormTest";
 	formationSet *formSet = new formationSet(formLearningSetFile);
-	formSet->crossValid();
+	//formSet->crossValidVoted();
+	//formSet->findSimForm();
+	formSet->leaveOneOutBestFormTest();
+	//formSet->testBestFormTrainingSet();
 	return 1;
 }
